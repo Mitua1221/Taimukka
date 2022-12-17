@@ -11,6 +11,10 @@ class MainViewModel @Inject constructor(
     private val collectUserStatsUC: CollectUserStatsUC
 ): TViewModel() {
 
+    init {
+        println("init")
+    }
+
     fun launch(context: Context) {
         viewModelScope.launch { collectUserStatsUC.collect(context = context) }
     }

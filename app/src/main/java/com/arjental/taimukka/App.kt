@@ -3,7 +3,7 @@ package com.arjental.taimukka
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
 
-class App : DaggerApplication() {
+open class App : DaggerApplication() {
 
     var appComponent: AppComponent? = null
         private set

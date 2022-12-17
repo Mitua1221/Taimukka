@@ -1,4 +1,4 @@
-package ru.taxcom.taxcomkit.utils.factories.viewmodelfactory
+package com.arjental.taimukka.utils.factories.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -8,7 +8,7 @@ import javax.inject.Singleton
 
 @Singleton
 @Suppress("UNCHECKED_CAST")
-class ViewModelFactory @Inject constructor(
+class TaimukkaViewModelFactory @Inject constructor(
     private val viewModels: MutableMap<Class<out ViewModel>,
             @JvmSuppressWildcards Provider<ViewModel>>
 ) : ViewModelProvider.Factory {

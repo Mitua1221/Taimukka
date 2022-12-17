@@ -5,12 +5,15 @@ import android.app.AppOpsManager
 import android.app.usage.UsageEvents
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.pm.PackageManager.NameNotFoundException
 import android.os.Build
 import android.os.Process
 import android.provider.Settings
 import android.util.Log
 import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
+
 
 interface UsageStatsManager {
 
@@ -35,7 +38,6 @@ class UsageStatsManagerImpl @Inject constructor() : UsageStatsManager {
         } else {
             context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
         }
-
     }
 
     @Suppress("DEPRECATION")
@@ -47,6 +49,17 @@ class UsageStatsManagerImpl @Inject constructor() : UsageStatsManager {
             appOpsManager.checkOpNoThrow("android:get_usage_stats", Process.myUid(), context.packageName)
         }
         return mode == AppOpsManager.MODE_ALLOWED
+    }
+
+    private fun getAllAppInfo(context: Context, packageName: String): String? {
+        return try {
+            val packageManager = context.packageManager
+            val info = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+            packageManager.getApplicationLabel(info) as String
+        } catch (e: NameNotFoundException) {
+            e.printStackTrace()
+            null
+        }
     }
 
 }

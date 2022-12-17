@@ -1,4 +1,4 @@
-package ru.taxcom.taxcomkit.utils.factories.viewmodelfactory
+package com.arjental.taimukka.utils.factories.viewmodel
 
 import androidx.lifecycle.ViewModel
 import dagger.MapKey

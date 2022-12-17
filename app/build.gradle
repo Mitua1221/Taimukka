@@ -2,7 +2,6 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
-    id 'com.google.dagger.hilt.android'
 }
 
 android {
@@ -95,18 +94,17 @@ dependencies {
     kapt "androidx.room:room-compiler:2.4.3"
     implementation "androidx.room:room-ktx:2.4.3"
 
-    //Hilt
-    implementation "com.google.dagger:hilt-android:2.44"
-    kapt "com.google.dagger:hilt-compiler:2.44"
+//    //Hilt
+//    implementation "com.google.dagger:hilt-android:2.44"
+//    kapt "com.google.dagger:hilt-compiler:2.44"
 
-
-
-//    dagger.compiler = "com.google.dagger:dagger-compiler:$versions.dagger"
-//    dagger.dagger = "com.google.dagger:dagger:$versions.dagger"
-//    dagger.compiler_kapt = "com.google.dagger:dagger-compiler:$versions.dagger"
-//    dagger.support = "com.google.dagger:dagger-android-support:$versions.dagger"
-//    dagger.processor = "com.google.dagger:dagger-android-processor:$versions.dagger"
-//    dagger.kotlinx = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:$versions.ktMeta"
+    //Dagger 2
+    kapt "com.google.dagger:dagger-compiler:2.44"
+    implementation "com.google.dagger:dagger:2.44"
+    kapt "com.google.dagger:dagger-compiler:2.44"
+    implementation "com.google.dagger:dagger-android-support:2.43.2"
+    kapt "com.google.dagger:dagger-android-processor:2.43.2"
+    //dagger.kotlinx = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:$versions.ktMeta"
 
 }
 

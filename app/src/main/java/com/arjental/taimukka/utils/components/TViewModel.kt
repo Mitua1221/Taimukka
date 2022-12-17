@@ -1,4 +1,4 @@
-package com.arjental.taimukka.components
+package com.arjental.taimukka.utils.components
 
 import androidx.lifecycle.ViewModel
 

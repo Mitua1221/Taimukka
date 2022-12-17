@@ -16,7 +16,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun launch(context: Context) {
-        viewModelScope.launch { collectUserStatsUC.collect(context = context) }
+        //viewModelScope.launch { collectUserStatsUC.collect(context = context) }
     }
 
 }

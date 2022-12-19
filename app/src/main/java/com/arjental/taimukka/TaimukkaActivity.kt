@@ -17,11 +17,11 @@ import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import com.arjental.taimukka.ui.screens.app_list.AppListTab
-import com.arjental.taimukka.ui.screens.main.MainTab
-import com.arjental.taimukka.ui.theme.TaimukkaTheme
-import com.arjental.taimukka.utils.components.activity.TaimukkaDaggerActivity
-import com.arjental.taimukka.utils.factories.viewmodel.Inject
+import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListTab
+import com.arjental.taimukka.presentaion.ui.screens.main.MainTab
+import com.arjental.taimukka.presentaion.ui.theme.TaimukkaTheme
+import com.arjental.taimukka.other.utils.components.activity.TaimukkaDaggerActivity
+import com.arjental.taimukka.other.utils.factories.viewmodel.Inject
 
 
 class TaimukkaActivity : TaimukkaDaggerActivity() {

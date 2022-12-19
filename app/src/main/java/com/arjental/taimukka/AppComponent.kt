@@ -1,11 +1,9 @@
 package com.arjental.taimukka
 
 import android.app.Application
-import com.arjental.taimukka.di.DomainModule
-import com.arjental.taimukka.di.ScreenModule
-import com.arjental.taimukka.di.VMModule
-import com.arjental.taimukka.utils.components.activity.TaimukkaDaggerActivity
-import com.arjental.taimukka.utils.factories.viewmodel.TaimukkaViewModelFactory
+import com.arjental.taimukka.other.di.DomainModule
+import com.arjental.taimukka.other.di.ScreenModule
+import com.arjental.taimukka.other.di.VMModule
 import dagger.BindsInstance
 import dagger.Component
 import dagger.android.AndroidInjector

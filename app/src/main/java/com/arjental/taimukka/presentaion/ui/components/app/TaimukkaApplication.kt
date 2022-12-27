@@ -2,9 +2,7 @@ package com.arjental.taimukka.presentaion.ui.components.app
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -14,6 +12,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.window.layout.DisplayFeature
 import androidx.window.layout.FoldingFeature
+import com.arjental.taimukka.presentaion.ui.components.navigations.BottomNavigationBar
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,47 +110,54 @@ private fun NavigationWrapper(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    if (navigationType == NavigationType.PERMANENT_NAVIGATION_DRAWER) {
-        PermanentNavigationDrawer(drawerContent = {
-            PermanentNavigationDrawerContent(
-                selectedDestination = "selectedDestination",
-                navigationContentPosition = navigationContentPosition,
-            )
-        }) {
-            AppContent(
-                navigationType = navigationType,
-                contentType = contentType,
-                displayFeatures = displayFeatures,
-                navigationContentPosition = navigationContentPosition,
-                selectedDestination = "selectedDestination",
-            )
+    when (navigationType) {
+        NavigationType.BOTTOM_NAVIGATION -> {
+            BottomNavigationBar()
         }
-    } else {
-        ModalNavigationDrawer(
-            drawerContent = {
-                ModalNavigationDrawerContent(
-                    selectedDestination = "selectedDestination",
-                    navigationContentPosition = navigationContentPosition,
-                    onDrawerClicked = {
-                        scope.launch {
-                            drawerState.close()
+        NavigationType.NAVIGATION_RAIL -> {
+            ModalNavigationDrawer(
+                drawerContent = {
+                    ModalNavigationDrawerContent(
+                        selectedDestination = "selectedDestination",
+                        navigationContentPosition = navigationContentPosition,
+                        onDrawerClicked = {
+                            scope.launch {
+                                drawerState.close()
+                            }
                         }
-                    }
-                )
-            },
-            drawerState = drawerState
-        ) {
-            AppContent(
-                navigationType = navigationType,
-                contentType = contentType,
-                displayFeatures = displayFeatures,
-                navigationContentPosition = navigationContentPosition,
-                selectedDestination = "selectedDestination",
+                    )
+                },
+                drawerState = drawerState
             ) {
-                scope.launch {
-                    drawerState.open()
+                AppContent(
+                    navigationType = navigationType,
+                    contentType = contentType,
+                    displayFeatures = displayFeatures,
+                    navigationContentPosition = navigationContentPosition,
+                    selectedDestination = "selectedDestination",
+                ) {
+                    scope.launch {
+                        drawerState.open()
+                    }
                 }
             }
+        }
+        NavigationType.PERMANENT_NAVIGATION_DRAWER -> {
+            PermanentNavigationDrawer(drawerContent = {
+                PermanentNavigationDrawerContent(
+                    selectedDestination = "selectedDestination",
+                    navigationContentPosition = navigationContentPosition,
+                )
+            }) {
+                AppContent(
+                    navigationType = navigationType,
+                    contentType = contentType,
+                    displayFeatures = displayFeatures,
+                    navigationContentPosition = navigationContentPosition,
+                    selectedDestination = "selectedDestination",
+                )
+            }
+
         }
     }
 }

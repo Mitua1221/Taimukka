@@ -16,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import com.arjental.taimukka.R
+import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListScreen
 
 class MainTab : Tab {
 
@@ -37,7 +38,7 @@ class MainTab : Tab {
     @Composable
     override fun Content() {
 
-        MainScreen(name = "name")
+        AppListScreen(name = "naiasdaasdasdsdnnnn")
 
 //        LazyColumn {
 //            items(5) { index ->

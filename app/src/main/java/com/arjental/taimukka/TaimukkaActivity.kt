@@ -45,56 +45,15 @@ class TaimukkaActivity : TaimukkaDaggerActivity() {
             TaimukkaTheme {
                 val windowSize = calculateWindowSizeClass(this)
                 val displayFeatures = calculateDisplayFeatures(this)
-
                 Inject(viewModelFactory) {
                     TaimukkaApplication(
                         windowSize = windowSize,
                         displayFeatures = displayFeatures,
                     )
-//                    Box(
-//                        modifier = Modifier
-//                            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-//                            .navigationBarsPadding(),
-//                    ) {
-//                        TabNavigator(MainTab()) {
-//                            Scaffold(
-//                                content = {
-//                                    CurrentTab()
-//                                },
-//                                bottomBar = {
-//                                    NavigationBar(
-//                                        containerColor = MaterialTheme.colorScheme.surface,
-//                                        contentColor = MaterialTheme.colorScheme.surfaceTint,
-//                                        tonalElevation = 3.dp
-//                                    ) {
-//                                        TabNavigationItem(MainTab())
-//                                        TabNavigationItem(AppListTab)
-//                                    }
-//                                }
-//                            )
-//                        }
-//                    }
-
-
-
-//                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-//                        MainScreen("Android")
-//                    }
                 }
             }
         }
     }
-
-//    @Composable
-//    private fun RowScope.TabNavigationItem(tab: Tab) {
-//        val tabNavigator = LocalTabNavigator.current
-//
-//        NavigationBarItem(
-//            selected = tabNavigator.current.key == tab.key,
-//            onClick = { tabNavigator.current = tab },
-//            icon = { Icon(painter = tab.options.icon!!, contentDescription = tab.options.title) }
-//        )
-//    }
 
 
 }

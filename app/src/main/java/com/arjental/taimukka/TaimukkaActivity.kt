@@ -1,78 +1,121 @@
 package com.arjental.taimukka
 
-import android.annotation.SuppressLint
-import android.app.AppOpsManager
-import android.app.usage.UsageEvents
-import android.app.usage.UsageStatsManager
-import android.content.Intent
-import android.os.Build
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import android.os.Bundle
-import android.os.Process.myUid
-import android.provider.Settings
-import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.arjental.taimukka.ui.screens.main.MainScreen
-import com.arjental.taimukka.ui.theme.TaimukkaTheme
-import dagger.hilt.android.AndroidEntryPoint
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import cafe.adriel.voyager.navigator.tab.CurrentTab
+import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
+import cafe.adriel.voyager.navigator.tab.Tab
+import cafe.adriel.voyager.navigator.tab.TabNavigator
+import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListTab
+import com.arjental.taimukka.presentaion.ui.screens.main.MainTab
+import com.arjental.taimukka.presentaion.ui.theme.TaimukkaTheme
+import com.arjental.taimukka.other.utils.components.activity.TaimukkaDaggerActivity
+import com.arjental.taimukka.other.utils.factories.viewmodel.Inject
+import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaApplication
+import com.google.accompanist.adaptive.calculateDisplayFeatures
 
-@AndroidEntryPoint
-class TaimukkaActivity : ComponentActivity() {
 
-    @SuppressLint("WrongConstant")
+class TaimukkaActivity : TaimukkaDaggerActivity() {
+
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        if ( checkUsageStatsPermission() ) {
-
-            val usageStatsManager = this.getSystemService("usagestats") as UsageStatsManager
-            var foregroundAppPackageName : String? = null
-            val currentTime = System.currentTimeMillis()
-            val usageEvents = usageStatsManager.queryEvents( 0 , currentTime )
-            val usageEvent = UsageEvents.Event()
-            while ( usageEvents.hasNextEvent() ) {
-                usageEvents.getNextEvent( usageEvent )
-                Log.d( "APP" , "${usageEvent.packageName} ${usageEvent.timeStamp}" )
-            }
-        } else {
-            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
-        }
-
-
-
-
-//        lifecycleScope.launch (Dispatchers.Main) {
-//            usm.launch()
-//        }
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val windowInsetsController =
+            ViewCompat.getWindowInsetsController(window.decorView)
+        windowInsetsController?.isAppearanceLightNavigationBars = true
 
         setContent {
             TaimukkaTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    MainScreen("Android")
+                val windowSize = calculateWindowSizeClass(this)
+                val displayFeatures = calculateDisplayFeatures(this)
+                Inject(viewModelFactory) {
+                    TaimukkaApplication(
+                        windowSize = windowSize,
+                        displayFeatures = displayFeatures,
+                    )
                 }
             }
         }
     }
 
-    @Suppress("DEPRECATION")
-    private fun checkUsageStatsPermission(): Boolean {
-        val appOpsManager = getSystemService(APP_OPS_SERVICE) as AppOpsManager
-        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            appOpsManager.unsafeCheckOpNoThrow("android:get_usage_stats", myUid(), packageName)
-        } else {
-            appOpsManager.checkOpNoThrow("android:get_usage_stats", myUid(), packageName)
-        }
-        return mode == AppOpsManager.MODE_ALLOWED
-    }
 
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Preview(showBackground = true)
+@Composable
+fun ReplyAppPreview() {
+    TaimukkaTheme {
+        TaimukkaApplication(
+            windowSize = WindowSizeClass.calculateFromSize(DpSize(400.dp, 900.dp)),
+            displayFeatures = emptyList(),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Preview(showBackground = true, widthDp = 700, heightDp = 500)
+@Composable
+fun ReplyAppPreviewTablet() {
+    TaimukkaTheme {
+        TaimukkaApplication(
+            windowSize = WindowSizeClass.calculateFromSize(DpSize(700.dp, 500.dp)),
+            displayFeatures = emptyList(),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Preview(showBackground = true, widthDp = 500, heightDp = 700)
+@Composable
+fun ReplyAppPreviewTabletPortrait() {
+    TaimukkaTheme {
+        TaimukkaApplication(
+            windowSize = WindowSizeClass.calculateFromSize(DpSize(500.dp, 700.dp)),
+            displayFeatures = emptyList(),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Preview(showBackground = true, widthDp = 1100, heightDp = 600)
+@Composable
+fun ReplyAppPreviewDesktop() {
+    TaimukkaTheme {
+        TaimukkaApplication(
+            windowSize = WindowSizeClass.calculateFromSize(DpSize(1100.dp, 600.dp)),
+            displayFeatures = emptyList(),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Preview(showBackground = true, widthDp = 600, heightDp = 1100)
+@Composable
+fun ReplyAppPreviewDesktopPortrait() {
+    TaimukkaTheme {
+        TaimukkaApplication(
+            windowSize = WindowSizeClass.calculateFromSize(DpSize(600.dp, 1100.dp)),
+            displayFeatures = emptyList(),
+        )
+    }
 }
 
 

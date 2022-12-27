@@ -18,10 +18,10 @@ fun MainScreen(
     name: String,
     viewModel: MainViewModel = daggerViewModel(),
 ) {
+    val state = viewModel.collect().collectAsState()
 
-    val f = MutableStateFlow(10).asStateFlow()
-    viewModel.launch()
-    Text(text = "Hello $name!")
+
+
 }
 
 @Preview(showBackground = true)

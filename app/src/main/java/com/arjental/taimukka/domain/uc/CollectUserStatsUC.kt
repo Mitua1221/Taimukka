@@ -1,13 +1,15 @@
 package com.arjental.taimukka.domain.uc
 
-import android.content.Context
-import com.arjental.taimukka.domain.repos.UsageStatsManager
+import com.arjental.taimukka.data.stats.UsageStatsManager
+import com.arjental.taimukka.domain.repos.UserStatsRepository
 import javax.inject.Inject
 
 class CollectUserStatsUC @Inject constructor(
-    private val usageStatsManager: UsageStatsManager
+    private val userStatsRepository: UserStatsRepository
 ) {
 
-    suspend fun collect() = usageStatsManager.launch()
+    suspend fun collect() {
+        userStatsRepository.collectStats()
+    }
 
 }

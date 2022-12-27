@@ -60,8 +60,9 @@ fun TaimukkaTheme(
     }
 
     MaterialTheme(
+        shapes = shapes,
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = typography,
         content = content
     )
 }

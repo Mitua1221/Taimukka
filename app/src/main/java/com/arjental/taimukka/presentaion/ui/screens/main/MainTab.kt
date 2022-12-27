@@ -17,7 +17,7 @@ import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import com.arjental.taimukka.R
 
-object MainTab : Tab {
+class MainTab : Tab {
 
     override val options: TabOptions
         @Composable

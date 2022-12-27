@@ -1,4 +1,4 @@
-package com.arjental.taimukka.domain.repos
+package com.arjental.taimukka.data.stats
 
 import android.annotation.SuppressLint
 import android.app.AppOpsManager
@@ -11,18 +11,18 @@ import android.content.pm.PackageManager.NameNotFoundException
 import android.os.Build
 import android.os.Process
 import android.provider.Settings
-import android.util.Log
+import com.arjental.taimukka.entities.data.user_stats.AppInformation
+import com.arjental.taimukka.entities.data.user_stats.CombinedUserEvents
+import com.arjental.taimukka.entities.data.user_stats.LaunchedApp
 import dagger.android.support.DaggerAppCompatActivity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import kotlinx.datetime.Clock
 import javax.inject.Inject
 
 
 interface UsageStatsManager {
 
-    suspend fun launch(startTimestamp: Long = 0L)
+    suspend fun launch(startTimestamp: Long = 0L): CombinedUserEvents
 
 }
 
@@ -32,25 +32,23 @@ class UsageStatsManagerImpl @Inject constructor(
 
     private val packageManager: PackageManager = context.packageManager
 
+
     @SuppressLint("WrongConstant")
-    override suspend fun launch(startTimestamp: Long): Unit = withContext(Dispatchers.Default) {
-        if (checkUsageStatsPermission(context = context)) {
+    override suspend fun launch(startTimestamp: Long): CombinedUserEvents = withContext(Dispatchers.Default) {
+        //if (checkUsageStatsPermission(context = context)) {
             val usageStatsManager = context.getSystemService("usagestats") as android.app.usage.UsageStatsManager
             val currentTime = Clock.System.now().toEpochMilliseconds()
 
             val usageEvents = async { usageStatsManager.queryEvents(startTimestamp, currentTime) }
             val nonSystemAppPackages = async { getNonSystemAppsList(context = context) }
 
-            val combinedUsers = async { combineUserEvents(usageEvents = usageEvents.await(), currentTime = currentTime, nonSystemAppPackages = nonSystemAppPackages.await()) }
-
-            combinedUsers.await().forEach {
-                it.value.launches.sumOf { it.second - it.first }
-            }
+            return@withContext combineUserEvents(usageEvents = usageEvents.await(), currentTime = currentTime, nonSystemAppPackages = nonSystemAppPackages.await())
 
 
-        } else {
-            withContext(Dispatchers.Main) { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
-        }
+
+//        } else {
+//            withContext(Dispatchers.Main) { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
+//        }
     }
 
     @Suppress("DEPRECATION")
@@ -69,7 +67,7 @@ class UsageStatsManagerImpl @Inject constructor(
             val info = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
             AppInformation(name = packageManager.getApplicationLabel(info) as String)
         } catch (e: NameNotFoundException) {
-            e.printStackTrace()
+            //e.printStackTrace()
             AppInformation()
         }
     }
@@ -85,8 +83,15 @@ class UsageStatsManagerImpl @Inject constructor(
         return appInfoMap
     }
 
-    private suspend fun combineUserEvents(usageEvents: UsageEvents, currentTime: Long, nonSystemAppPackages: Set<String>): Map<String, LaunchedApp> {
+    /**
+     * Parse events of launch/stop apps, launch/stop screen
+     * @param context additional to [CoroutineScope.coroutineContext] context of the coroutine.
+     * @param start coroutine start option. The default value is [CoroutineStart.DEFAULT].
+     */
+
+    private suspend fun combineUserEvents(usageEvents: UsageEvents, currentTime: Long, nonSystemAppPackages: Set<String>): CombinedUserEvents {
         val map = mutableMapOf<String, LaunchedApp>()
+        val interactive = mutableListOf<Pair<Int, Long>>()
 
         var previousUsageEvent: UsageEvents.Event? = null
 
@@ -94,6 +99,13 @@ class UsageStatsManagerImpl @Inject constructor(
 
             val usageEvent = UsageEvents.Event()
             usageEvents.getNextEvent(usageEvent)
+
+            if (usageEvent.eventType == UsageEvents.Event.SCREEN_INTERACTIVE ||
+                usageEvent.eventType == UsageEvents.Event.SCREEN_NON_INTERACTIVE ||
+                usageEvent.eventType == UsageEvents.Event.DEVICE_SHUTDOWN
+            ) {
+                interactive.add(usageEvent.eventType to usageEvent.timeStamp)
+            }
 
             if (previousUsageEvent != null) {
                 combinePreviousUsage(
@@ -117,7 +129,10 @@ class UsageStatsManagerImpl @Inject constructor(
             )
         }
 
-        return map
+        return CombinedUserEvents(
+            launchedAppsMap = map,
+            screenInteractiveEvents = interactive,
+        )
     }
 
     private suspend inline fun combinePreviousUsage(usageEventTimeStamp: Long, map: MutableMap<String, LaunchedApp>, previousUsageEvent: UsageEvents.Event, nonSystemApp: Boolean) {
@@ -130,16 +145,5 @@ class UsageStatsManagerImpl @Inject constructor(
             map[previousUsageEventPackageName] = LaunchedApp(appPackage = previousUsageEventPackageName, appName = applicationInfo.name, launches = mutableListOf(Pair(first = previousUsageEvent.timeStamp, second = usageEventTimeStamp)), nonSystem = nonSystemApp)
         }
     }
-
-    private class AppInformation(
-        val name: String = "-"
-    )
-
-    private class LaunchedApp(
-        val appPackage: String,
-        val appName: String,
-        val nonSystem: Boolean,
-        val launches: MutableList<Pair<Long, Long>>,
-    )
 
 }

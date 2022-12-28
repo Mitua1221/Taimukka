@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.tab.CurrentTab
-import cafe.adriel.voyager.navigator.tab.TabNavigator
 import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListTab
 import com.arjental.taimukka.presentaion.ui.screens.main.MainTab
 
@@ -20,7 +19,6 @@ fun BottomNavigationBar() {
             .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
             .navigationBarsPadding(),
     ) {
-        TabNavigator(MainTab()) {
             Scaffold(
                 content = {
                     CurrentTab()
@@ -36,7 +34,6 @@ fun BottomNavigationBar() {
                     }
                 }
             )
-        }
     }
 }
 

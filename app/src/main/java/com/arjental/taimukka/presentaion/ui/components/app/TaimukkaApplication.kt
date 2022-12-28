@@ -12,7 +12,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.window.layout.DisplayFeature
 import androidx.window.layout.FoldingFeature
+import cafe.adriel.voyager.navigator.tab.CurrentTab
+import cafe.adriel.voyager.navigator.tab.TabNavigator
 import com.arjental.taimukka.presentaion.ui.components.navigations.BottomNavigationBar
+import com.arjental.taimukka.presentaion.ui.components.navigations.startTab
+import com.arjental.taimukka.presentaion.ui.screens.main.MainTab
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,59 +111,78 @@ private fun NavigationWrapper(
     displayFeatures: List<DisplayFeature>,
     navigationContentPosition: NavigationContentPosition,
 ) {
+    TabNavigator(startTab) {
+        when (navigationType) {
+            NavigationType.BOTTOM_NAVIGATION -> {
+                BottomNavigationBar()
+            }
+            NavigationType.NAVIGATION_RAIL -> {
+                ModalNavigationRailDrawer(
+                    navigationType = navigationType,
+                    contentType = contentType,
+                    displayFeatures = displayFeatures,
+                    navigationContentPosition = navigationContentPosition,
+                )
+            }
+            NavigationType.PERMANENT_NAVIGATION_DRAWER -> {
+                PermanentNavigationDrawer(drawerContent = {
+                    PermanentNavigationDrawerContent(
+                        selectedDestination = "selectedDestination",
+                        navigationContentPosition = navigationContentPosition,
+                    )
+                }) {
+                    AppContent(
+                        navigationType = navigationType,
+                        contentType = contentType,
+                        displayFeatures = displayFeatures,
+                        navigationContentPosition = navigationContentPosition,
+                        selectedDestination = "selectedDestination",
+                    )
+                }
+
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ModalNavigationRailDrawer(
+    navigationType: NavigationType,
+    contentType: ContentType,
+    displayFeatures: List<DisplayFeature>,
+    navigationContentPosition: NavigationContentPosition,
+) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    when (navigationType) {
-        NavigationType.BOTTOM_NAVIGATION -> {
-            BottomNavigationBar()
-        }
-        NavigationType.NAVIGATION_RAIL -> {
-            ModalNavigationDrawer(
-                drawerContent = {
-                    ModalNavigationDrawerContent(
-                        selectedDestination = "selectedDestination",
-                        navigationContentPosition = navigationContentPosition,
-                        onDrawerClicked = {
-                            scope.launch {
-                                drawerState.close()
-                            }
-                        }
-                    )
-                },
-                drawerState = drawerState
-            ) {
-                AppContent(
-                    navigationType = navigationType,
-                    contentType = contentType,
-                    displayFeatures = displayFeatures,
-                    navigationContentPosition = navigationContentPosition,
-                    selectedDestination = "selectedDestination",
-                ) {
+    ModalNavigationDrawer(
+        drawerContent = {
+            ModalNavigationDrawerContent(
+                selectedDestination = "selectedDestination",
+                navigationContentPosition = navigationContentPosition,
+                onDrawerClicked = {
                     scope.launch {
-                        drawerState.open()
+                        drawerState.close()
                     }
                 }
+            )
+        },
+        drawerState = drawerState
+    ) {
+        AppContent(
+            navigationType = navigationType,
+            contentType = contentType,
+            displayFeatures = displayFeatures,
+            navigationContentPosition = navigationContentPosition,
+            selectedDestination = "selectedDestination",
+        ) {
+            scope.launch {
+                drawerState.open()
             }
-        }
-        NavigationType.PERMANENT_NAVIGATION_DRAWER -> {
-            PermanentNavigationDrawer(drawerContent = {
-                PermanentNavigationDrawerContent(
-                    selectedDestination = "selectedDestination",
-                    navigationContentPosition = navigationContentPosition,
-                )
-            }) {
-                AppContent(
-                    navigationType = navigationType,
-                    contentType = contentType,
-                    displayFeatures = displayFeatures,
-                    navigationContentPosition = navigationContentPosition,
-                    selectedDestination = "selectedDestination",
-                )
-            }
-
         }
     }
+
 }
 
 @Composable
@@ -183,15 +206,9 @@ fun AppContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.inverseOnSurface)
+                .background(MaterialTheme.colorScheme.background)
         ) {
-
-            //here was a navhost
-            AnimatedVisibility(visible = navigationType == NavigationType.BOTTOM_NAVIGATION) {
-                BottomNavigationBar(
-                    selectedDestination = selectedDestination,
-                )
-            }
+            CurrentTab()
         }
     }
 }

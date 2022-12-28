@@ -1,37 +1,13 @@
 package com.arjental.taimukka.presentaion.ui.components.app
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.PermanentDrawerSheet
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +19,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import com.arjental.taimukka.R
+import com.arjental.taimukka.presentaion.ui.components.navigations.navigationTabs
+import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListTab
 
 @Composable
 fun NavigationRail(
@@ -94,20 +73,21 @@ fun NavigationRail(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-//                    TOP_LEVEL_DESTINATIONS.forEach { replyDestination ->
-//                        NavigationRailItem(
-//                            selected = selectedDestination == replyDestination.route,
-//                            onClick = { /*navigateToTopLevelDestination(replyDestination)*/ },
-//                            icon = {
-//                                Icon(
-//                                    imageVector = replyDestination.selectedIcon,
-//                                    contentDescription = stringResource(
-//                                        id = replyDestination.iconTextId
-//                                    )
-//                                )
-//                            }
-//                        )
-//                    }
+                    val tabNavigator = LocalTabNavigator.current
+                    navigationTabs.forEach { tab ->
+                        NavigationRailItem(
+                            selected = tabNavigator.current.key == tab.key,
+                            onClick = { tabNavigator.current = tab },
+                            icon = {
+                                tab.options.icon?.let {
+                                    Icon(
+                                        painter = it,
+                                        contentDescription = tab.options.title
+                                    )
+                                }
+                            }
+                        )
+                    }
                 }
             },
             measurePolicy = { measurables, constraints ->
@@ -220,29 +200,31 @@ fun PermanentNavigationDrawerContent(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-//                    TOP_LEVEL_DESTINATIONS.forEach { replyDestination ->
-//                        NavigationDrawerItem(
-//                            selected = selectedDestination == replyDestination.route,
-//                            label = {
-//                                Text(
-//                                    text = stringResource(id = replyDestination.iconTextId),
-//                                    modifier = Modifier.padding(horizontal = 16.dp)
-//                                )
-//                            },
-//                            icon = {
-//                                Icon(
-//                                    imageVector = replyDestination.selectedIcon,
-//                                    contentDescription = stringResource(
-//                                        id = replyDestination.iconTextId
-//                                    )
-//                                )
-//                            },
-//                            colors = NavigationDrawerItemDefaults.colors(
-//                                unselectedContainerColor = Color.Transparent
-//                            ),
-//                            onClick = { navigateToTopLevelDestination(replyDestination) }
-//                        )
-//                    }
+                    val tabNavigator = LocalTabNavigator.current
+                    navigationTabs.forEach { tab ->
+                        NavigationDrawerItem(
+                            selected = tabNavigator.current.key == tab.key,
+                            label = {
+                                Text(
+                                    text = tab.options.title,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                )
+                            },
+                            icon = {
+                                tab.options.icon?.let { painter ->
+                                    Icon(
+                                        painter = painter,
+                                        contentDescription = tab.options.title
+                                    )
+                                }
+
+                            },
+                            colors = NavigationDrawerItemDefaults.colors(
+                                unselectedContainerColor = Color.Transparent
+                            ),
+                            onClick = { tabNavigator.current = tab }
+                        )
+                    }
                 }
             },
             measurePolicy = { measurables, constraints ->
@@ -349,29 +331,31 @@ fun ModalNavigationDrawerContent(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-//                    TOP_LEVEL_DESTINATIONS.forEach { replyDestination ->
-//                        NavigationDrawerItem(
-//                            selected = selectedDestination == replyDestination.route,
-//                            label = {
-//                                Text(
-//                                    text = stringResource(id = replyDestination.iconTextId),
-//                                    modifier = Modifier.padding(horizontal = 16.dp)
-//                                )
-//                            },
-//                            icon = {
-//                                Icon(
-//                                    imageVector = replyDestination.selectedIcon,
-//                                    contentDescription = stringResource(
-//                                        id = replyDestination.iconTextId
-//                                    )
-//                                )
-//                            },
-//                            colors = NavigationDrawerItemDefaults.colors(
-//                                unselectedContainerColor = Color.Transparent
-//                            ),
-//                            onClick = { navigateToTopLevelDestination(replyDestination) }
-//                        )
-//                    }
+                    val tabNavigator = LocalTabNavigator.current
+                    navigationTabs.forEach { tab ->
+                        NavigationDrawerItem(
+                            selected = tabNavigator.current.key == tab.key,
+                            label = {
+                                Text(
+                                    text = tab.options.title,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                )
+                            },
+                            icon = {
+                                tab.options.icon?.let { painter ->
+                                    Icon(
+                                        painter = painter,
+                                        contentDescription = tab.options.title
+                                    )
+                                }
+
+                            },
+                            colors = NavigationDrawerItemDefaults.colors(
+                                unselectedContainerColor = Color.Transparent
+                            ),
+                            onClick = { tabNavigator.current = tab }
+                        )
+                    }
                 }
             },
             measurePolicy = { measurables, constraints ->

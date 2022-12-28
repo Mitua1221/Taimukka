@@ -16,12 +16,12 @@ class AppListTab : Tab {
     override val options: TabOptions
         @Composable
         get() {
-            val title = "App list TAb"//stringResource(R.string.home_tab)
-            val icon = rememberVectorPainter(Icons.Default.List)
+            val title = stringResource(R.string.app_list_tab)
+            val icon = rememberVectorPainter(Icons.Filled.List)
 
             return remember {
                 TabOptions(
-                    index = 0u,
+                    index = 1u,
                     title = title,
                     icon = icon
                 )
@@ -30,6 +30,6 @@ class AppListTab : Tab {
 
     @Composable
     override fun Content() {
-        AppListScreen(name = "naiasdasdnnnn")
+        AppListScreen(name = "app_list_tab")
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.window.layout.DisplayFeature
@@ -16,7 +17,10 @@ import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import com.arjental.taimukka.presentaion.ui.components.navigations.BottomNavigationBar
 import com.arjental.taimukka.presentaion.ui.components.navigations.startTab
-import com.arjental.taimukka.presentaion.ui.screens.main.MainTab
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalComponentType
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalDisplayFeatures
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationContentPosition
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationType
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,65 +98,51 @@ fun TaimukkaApplication(
         }
     }
 
-    NavigationWrapper(
-        navigationType = navigationType,
-        contentType = contentType,
-        displayFeatures = displayFeatures,
-        navigationContentPosition = navigationContentPosition,
-    )
+    CompositionLocalProvider(
+        LocalDisplayFeatures provides displayFeatures,
+        LocalComponentType provides contentType,
+        LocalNavigationType provides navigationType,
+        LocalNavigationContentPosition provides navigationContentPosition
+    ) {
+        NavigationWrapper()
+    }
 
 }
 
+data class Movie(val title: String, val year: Int)
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun NavigationWrapper(
-    navigationType: NavigationType,
-    contentType: ContentType,
-    displayFeatures: List<DisplayFeature>,
-    navigationContentPosition: NavigationContentPosition,
-) {
+private fun NavigationWrapper() {
+
     TabNavigator(startTab) {
-        when (navigationType) {
+        when (LocalNavigationType.current) {
             NavigationType.BOTTOM_NAVIGATION -> {
                 BottomNavigationBar()
             }
             NavigationType.NAVIGATION_RAIL -> {
-                ModalNavigationRailDrawer(
-                    navigationType = navigationType,
-                    contentType = contentType,
-                    displayFeatures = displayFeatures,
-                    navigationContentPosition = navigationContentPosition,
-                )
+                ModalNavigationRailDrawer()
             }
             NavigationType.PERMANENT_NAVIGATION_DRAWER -> {
                 PermanentNavigationDrawer(drawerContent = {
                     PermanentNavigationDrawerContent(
                         selectedDestination = "selectedDestination",
-                        navigationContentPosition = navigationContentPosition,
+                        navigationContentPosition = LocalNavigationContentPosition.current,
                     )
                 }) {
-                    AppContent(
-                        navigationType = navigationType,
-                        contentType = contentType,
-                        displayFeatures = displayFeatures,
-                        navigationContentPosition = navigationContentPosition,
-                        selectedDestination = "selectedDestination",
-                    )
+                    AppContent()
                 }
 
             }
         }
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModalNavigationRailDrawer(
-    navigationType: NavigationType,
-    contentType: ContentType,
-    displayFeatures: List<DisplayFeature>,
-    navigationContentPosition: NavigationContentPosition,
-) {
+fun ModalNavigationRailDrawer() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -160,7 +150,7 @@ fun ModalNavigationRailDrawer(
         drawerContent = {
             ModalNavigationDrawerContent(
                 selectedDestination = "selectedDestination",
-                navigationContentPosition = navigationContentPosition,
+                navigationContentPosition = LocalNavigationContentPosition.current,
                 onDrawerClicked = {
                     scope.launch {
                         drawerState.close()
@@ -170,13 +160,7 @@ fun ModalNavigationRailDrawer(
         },
         drawerState = drawerState
     ) {
-        AppContent(
-            navigationType = navigationType,
-            contentType = contentType,
-            displayFeatures = displayFeatures,
-            navigationContentPosition = navigationContentPosition,
-            selectedDestination = "selectedDestination",
-        ) {
+        AppContent {
             scope.launch {
                 drawerState.open()
             }
@@ -188,18 +172,11 @@ fun ModalNavigationRailDrawer(
 @Composable
 fun AppContent(
     modifier: Modifier = Modifier,
-    navigationType: NavigationType,
-    contentType: ContentType,
-    displayFeatures: List<DisplayFeature>,
-    navigationContentPosition: NavigationContentPosition,
-    selectedDestination: String,
     onDrawerClicked: () -> Unit = {}
 ) {
     Row(modifier = modifier.fillMaxSize()) {
-        AnimatedVisibility(visible = navigationType == NavigationType.NAVIGATION_RAIL) {
+        AnimatedVisibility(visible = LocalNavigationType.current == NavigationType.NAVIGATION_RAIL) {
             NavigationRail(
-                selectedDestination = selectedDestination,
-                navigationContentPosition = navigationContentPosition,
                 onDrawerClicked = onDrawerClicked,
             )
         }

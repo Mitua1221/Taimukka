@@ -15,13 +15,10 @@ import com.arjental.taimukka.R
 import com.arjental.taimukka.presentaion.ui.components.app.ContentType
 import com.arjental.taimukka.presentaion.ui.components.app.NavigationType
 import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaWrapLines
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalComponentType
 import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListScreen
 
-class MainTab(
-    val contentType: ContentType,
-    val navigationType: NavigationType,
-    val displayFeatures: List<DisplayFeature>
-) : Tab {
+class MainTab() : Tab {
 
     override val options: TabOptions
         @Composable
@@ -44,7 +41,7 @@ class MainTab(
 
         AppListScreen(name = "HOME TAB")
 
-        TaimukkaWrapLines(contentType = contentType, navigationType = navigationType, displayFeatures = displayFeatures,
+        TaimukkaWrapLines(
             firstColumn = {
                 LazyColumn {
                     items(100) { index ->

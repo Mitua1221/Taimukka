@@ -18,8 +18,7 @@ fun MainScreen(
     name: String,
     viewModel: MainViewModel = daggerViewModel(),
 ) {
-    val state = viewModel.collect().collectAsState()
-
+    //viewModel.collect()
 
 
 }

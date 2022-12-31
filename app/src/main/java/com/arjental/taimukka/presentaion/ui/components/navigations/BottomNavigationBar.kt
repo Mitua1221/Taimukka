@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.tab.CurrentTab
 import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListTab
@@ -19,6 +20,7 @@ fun BottomNavigationBar() {
             .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
             .navigationBarsPadding(),
     ) {
+
             Scaffold(
                 content = {
                     CurrentTab()

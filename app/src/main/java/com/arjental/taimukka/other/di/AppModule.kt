@@ -10,7 +10,8 @@ import javax.inject.Singleton
 
 @Module(
     includes = [
-        AndroidSupportInjectionModule::class
+        AndroidSupportInjectionModule::class,
+        VMModule::class,
     ]
 )
 class AppModule {

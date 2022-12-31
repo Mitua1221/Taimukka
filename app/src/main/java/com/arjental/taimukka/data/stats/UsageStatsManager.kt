@@ -1,29 +1,23 @@
 package com.arjental.taimukka.data.stats
 
-import android.annotation.SuppressLint
 import android.app.AppOpsManager
 import android.app.usage.UsageEvents
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
 import android.os.Build
 import android.os.Process
-import android.provider.Settings
 import com.arjental.taimukka.entities.data.user_stats.AppInformation
 import com.arjental.taimukka.entities.data.user_stats.CombinedUserEvents
 import com.arjental.taimukka.entities.data.user_stats.LaunchedApp
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.coroutines.*
-import kotlinx.datetime.Clock
 import javax.inject.Inject
 
 
 interface UsageStatsManager {
-
-    suspend fun launch(startTimestamp: Long = 0L): CombinedUserEvents
-
+    suspend fun getApplicationsStats(startTimestamp: Long, finishTimestamp: Long): List<LaunchedApp>
 }
 
 class UsageStatsManagerImpl @Inject constructor(
@@ -32,23 +26,39 @@ class UsageStatsManagerImpl @Inject constructor(
 
     private val packageManager: PackageManager = context.packageManager
 
+    override suspend fun getApplicationsStats(startTimestamp: Long, finishTimestamp: Long): List<LaunchedApp> = withContext(Dispatchers.Default) {
+        val usageStatsManager = context.getSystemService("usagestats") as android.app.usage.UsageStatsManager
 
-    @SuppressLint("WrongConstant")
-    override suspend fun launch(startTimestamp: Long): CombinedUserEvents = withContext(Dispatchers.Default) {
-        //if (checkUsageStatsPermission(context = context)) {
-            val usageStatsManager = context.getSystemService("usagestats") as android.app.usage.UsageStatsManager
-            val currentTime = Clock.System.now().toEpochMilliseconds()
+        val usageEvents = usageStatsManager.queryEvents(startTimestamp, finishTimestamp)
+        val nonSystemAppPackages = getNonSystemAppsList()
 
-            val usageEvents = async { usageStatsManager.queryEvents(startTimestamp, currentTime) }
-            val nonSystemAppPackages = async { getNonSystemAppsList(context = context) }
+        return@withContext  combineApplicationStats(usageEvents = usageEvents, nonSystemAppPackages = nonSystemAppPackages)
+    }
 
-            return@withContext combineUserEvents(usageEvents = usageEvents.await(), currentTime = currentTime, nonSystemAppPackages = nonSystemAppPackages.await())
+    private suspend fun combineApplicationStats(usageEvents: UsageEvents, nonSystemAppPackages: Set<String>): List<LaunchedApp> {
 
+        val map = mutableMapOf<String, LaunchedApp>()
 
+        var previousUsageEvent: UsageEvents.Event? = null
 
-//        } else {
-//            withContext(Dispatchers.Main) { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
-//        }
+        while (usageEvents.hasNextEvent()) {
+
+            val usageEvent = UsageEvents.Event()
+            usageEvents.getNextEvent(usageEvent)
+
+            if (previousUsageEvent != null) {
+                combinePreviousUsage(
+                    usageEventTimeStamp = usageEvent.timeStamp,
+                    map = map,
+                    previousUsageEvent = previousUsageEvent,
+                    nonSystemApp = nonSystemAppPackages.contains(previousUsageEvent.packageName),
+                )
+            }
+
+            previousUsageEvent = usageEvent
+        }
+
+        return map.values.toList()
     }
 
     @Suppress("DEPRECATION")
@@ -62,18 +72,18 @@ class UsageStatsManagerImpl @Inject constructor(
         return mode == AppOpsManager.MODE_ALLOWED
     }
 
+    @Suppress("DEPRECATION")
     private suspend inline fun getAllAppInfo(packageName: String): AppInformation {
         return try {
             val info = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
             AppInformation(name = packageManager.getApplicationLabel(info) as String)
         } catch (e: NameNotFoundException) {
-            //e.printStackTrace()
             AppInformation()
         }
     }
 
     @Suppress("DEPRECATION")
-    private suspend fun getNonSystemAppsList(context: Context): Set<String> {
+    private suspend fun getNonSystemAppsList(): Set<String> {
         val packageManager = context.packageManager
         val appInfos = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
         val appInfoMap = mutableSetOf<String>()
@@ -145,5 +155,8 @@ class UsageStatsManagerImpl @Inject constructor(
             map[previousUsageEventPackageName] = LaunchedApp(appPackage = previousUsageEventPackageName, appName = applicationInfo.name, launches = mutableListOf(Pair(first = previousUsageEvent.timeStamp, second = usageEventTimeStamp)), nonSystem = nonSystemApp)
         }
     }
+
+
+
 
 }

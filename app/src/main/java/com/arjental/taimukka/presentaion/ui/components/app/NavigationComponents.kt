@@ -22,18 +22,18 @@ import androidx.compose.ui.unit.offset
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import com.arjental.taimukka.R
 import com.arjental.taimukka.presentaion.ui.components.navigations.navigationTabs
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationContentPosition
 import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListTab
 
 @Composable
 fun NavigationRail(
-    selectedDestination: String,
-    navigationContentPosition: NavigationContentPosition,
     onDrawerClicked: () -> Unit = {},
 ) {
     NavigationRail(
         modifier = Modifier.fillMaxHeight(),
         containerColor = MaterialTheme.colorScheme.inverseOnSurface
     ) {
+        val navigationContentPosition = LocalNavigationContentPosition.current
         Layout(
             modifier = Modifier.widthIn(max = 80.dp),
             content = {

@@ -9,3 +9,4 @@ class CombinedUserEvents(
     val launchedAppsMap: Map<String, LaunchedApp>,
     val screenInteractiveEvents: List<Pair<Int, Long>>, //
 )
+

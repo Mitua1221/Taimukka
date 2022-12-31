@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.window.layout.DisplayFeature
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalComponentType
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalDisplayFeatures
 import com.google.accompanist.adaptive.HorizontalTwoPaneStrategy
 import com.google.accompanist.adaptive.TwoPane
 
@@ -32,16 +34,13 @@ import com.google.accompanist.adaptive.TwoPane
 @Composable
 fun TaimukkaWrapLines(
     modifier: Modifier = Modifier,
-    contentType: ContentType,
-    navigationType: NavigationType,
-    displayFeatures: List<DisplayFeature>,
     firstColumn: @Composable () -> Unit,
     secondColumn: (@Composable () -> Unit)? = null,
 ) {
 
     val emailLazyListState = rememberLazyListState()
 
-    if (contentType == ContentType.DUAL_PANE) {
+    if (LocalComponentType.current == ContentType.DUAL_PANE) {
         TwoPane(
             first = {
                 firstColumn()
@@ -50,7 +49,7 @@ fun TaimukkaWrapLines(
                 secondColumn?.invoke()
             },
             strategy = HorizontalTwoPaneStrategy(splitFraction = 0.5f, gapWidth = 16.dp),
-            displayFeatures = displayFeatures
+            displayFeatures = LocalDisplayFeatures.current
         )
     } else {
         Box(modifier = modifier.fillMaxSize()) {

@@ -2,10 +2,7 @@ package com.arjental.taimukka
 
 import android.app.Application
 import android.content.Context
-import com.arjental.taimukka.other.di.AppModule
-import com.arjental.taimukka.other.di.DomainModule
-import com.arjental.taimukka.other.di.ScreenModule
-import com.arjental.taimukka.other.di.VMModule
+import com.arjental.taimukka.other.di.*
 import dagger.BindsInstance
 import dagger.Component
 import dagger.android.AndroidInjector
@@ -16,9 +13,9 @@ import javax.inject.Singleton
 @Component(
     modules = [
         AppModule::class,
-        VMModule::class,
         DomainModule::class,
         ScreenModule::class,
+        DataModule::class,
     ]
 )
 interface AppComponent : AndroidInjector<DaggerApplication> {

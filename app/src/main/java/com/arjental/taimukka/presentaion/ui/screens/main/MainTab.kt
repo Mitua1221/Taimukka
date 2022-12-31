@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
@@ -12,16 +13,14 @@ import androidx.window.layout.DisplayFeature
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import com.arjental.taimukka.R
+import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
 import com.arjental.taimukka.presentaion.ui.components.app.ContentType
 import com.arjental.taimukka.presentaion.ui.components.app.NavigationType
 import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaWrapLines
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalComponentType
 import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListScreen
 
-class MainTab(
-    val contentType: ContentType,
-    val navigationType: NavigationType,
-    val displayFeatures: List<DisplayFeature>
-) : Tab {
+class MainTab() : Tab {
 
     override val options: TabOptions
         @Composable
@@ -41,16 +40,23 @@ class MainTab(
     @Composable
     override fun Content() {
 
+        val mainViewModel = daggerViewModel<MainViewModel>()
+        mainViewModel.loadApplicationStats()
 
-        AppListScreen(name = "HOME TAB")
-
-        TaimukkaWrapLines(contentType = contentType, navigationType = navigationType, displayFeatures = displayFeatures,
+        TaimukkaWrapLines(
             firstColumn = {
-                LazyColumn {
-                    items(100) { index ->
-                        Text(text = "Item: $index")
+                val applicationsListState = mainViewModel.collectState().collectAsState().value
+                when (applicationsListState) {
+                    is MainState.PageLoaded -> {
+                        LazyColumn {
+                            items(applicationsListState.list.size) { index ->
+                                Text(text = "Item: ${applicationsListState.list[index]}")
+                            }
+                        }
                     }
+                    else -> {}
                 }
+
             },
             secondColumn = {
                 LazyColumn {

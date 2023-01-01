@@ -34,12 +34,15 @@ class UserStatsRepositoryImpl @Inject constructor(
         //send from cash
         send(Resource.loading(data = cashedUpdatedApps.await()))
         //get from stats
-        val stats = usageStatsManager.getApplicationsStats(startTimestamp = lastUpdateAppsTime.await(), finishTimestamp = currentTime).toDomain()
+        val stats = usageStatsManager.getApplicationsStats(startTimestamp = lastUpdateAppsTime.await(), finishTimestamp = currentTime).filter { !it.nonSystem }.toDomain()
         //merge
         val mergedElements = merge(cash = cashedUpdatedApps.await(), stats = stats.associateBy { it.appPackage }.toMutableMap())
         //send merged
         launch { send(Resource.success(data = mergedElements)) }
-        launch { applicationsStatsHolder.setApplications(applicationsList = mergedElements.toCash()) }
+        launch {
+            applicationsStatsHolder.setApplications(applicationsList = mergedElements.toCash())
+            updateTimesHolder.updatedAppList(currentTime)
+        }
     }
 
     //stats - package name + domain

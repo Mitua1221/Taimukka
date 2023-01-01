@@ -3,6 +3,8 @@ package com.arjental.taimukka.presentaion.ui.components.navigations
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,8 +24,10 @@ fun BottomNavigationBar() {
     ) {
 
             Scaffold(
-                content = {
-                    CurrentTab()
+                content = { padding ->
+                    Box(modifier = Modifier.padding(bottom = padding.calculateBottomPadding())) {
+                        CurrentTab()
+                    }
                 },
                 bottomBar = {
                     NavigationBar(
@@ -31,10 +35,11 @@ fun BottomNavigationBar() {
                         contentColor = MaterialTheme.colorScheme.surfaceTint,
                         tonalElevation = 3.dp
                     ) {
-                        TabNavigationItem(MainTab())
-                        TabNavigationItem(AppListTab())
+                        navigationTabs.forEach {
+                            TabNavigationItem(it)
+                        }
                     }
-                }
+                },
             )
     }
 }

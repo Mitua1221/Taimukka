@@ -25,6 +25,7 @@ suspend fun List<LaunchedAppDomain>.toCash(): List<ApplicationStatsCash> = this.
         ),
         timeMarks = it.launches.map { launch ->
             ApplicationTimeMarksCash(
+                key = it.appPackage+launch.from,
                 from = launch.from,
                 to = launch.to,
                 appPackage = it.appPackage

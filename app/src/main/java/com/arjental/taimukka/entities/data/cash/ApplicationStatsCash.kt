@@ -15,15 +15,15 @@ data class ApplicationStatsCash(
 )
 
 @Entity(tableName = "applications_info")
-data class ApplicationInfoCash(
+class ApplicationInfoCash(
     @ColumnInfo(name = "app_package") @PrimaryKey val appPackage: String,
     @ColumnInfo(name = "app_name") val appName: String,
     @ColumnInfo(name = "app_non_system") val nonSystem: Boolean,
 )
 
 @Entity(tableName = "applications_time_marks")
-data class ApplicationTimeMarksCash(
-    @ColumnInfo(name = "time_key") @PrimaryKey(autoGenerate = true) val key: Long = 0,
+class ApplicationTimeMarksCash(
+    @ColumnInfo(name = "time_key") @PrimaryKey val key: String,
     @ColumnInfo(name = "app_package_sync") val appPackage: String,
     @ColumnInfo(name = "from") val from: Long,
     @ColumnInfo(name = "to") val to: Long,

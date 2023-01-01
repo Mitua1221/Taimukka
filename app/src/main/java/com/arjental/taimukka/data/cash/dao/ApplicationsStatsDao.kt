@@ -17,7 +17,7 @@ interface ApplicationsStatsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun setApplications(appList: List<ApplicationInfoCash>)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun setApplicationTimeMarks(timeMarksList: List<ApplicationTimeMarksCash>)
 
     @Transaction

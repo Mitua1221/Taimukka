@@ -40,33 +40,33 @@ class MainTab() : Tab {
     @Composable
     override fun Content() {
 
-        val mainViewModel = daggerViewModel<MainViewModel>()
-        mainViewModel.loadApplicationStats()
-
-        TaimukkaWrapLines(
-            firstColumn = {
-                val applicationsListState = mainViewModel.collectState().collectAsState().value
-                when (applicationsListState) {
-                    is MainState.PageLoaded -> {
-                        LazyColumn {
-                            items(applicationsListState.list.size) { index ->
-                                Text(text = "Item: ${applicationsListState.list[index]}")
-                            }
-                        }
-                    }
-                    else -> {}
-                }
-
-            },
-            secondColumn = {
-                LazyColumn {
-                    items(100) { index ->
-                        Text(text = "Item: $index")
-                    }
-                }
-            }
-
-        )
+//        val mainViewModel = daggerViewModel<MainViewModel>()
+//        mainViewModel.loadApplicationStats()
+//
+//        TaimukkaWrapLines(
+//            firstColumn = {
+//                val applicationsListState = mainViewModel.collectState().collectAsState().value
+//                when (applicationsListState) {
+//                    is MainState.PageLoaded -> {
+//                        LazyColumn {
+//                            items(applicationsListState.list.size) { index ->
+//                                Text(text = "Item: ${applicationsListState.list[index]}")
+//                            }
+//                        }
+//                    }
+//                    else -> {}
+//                }
+//
+//            },
+//            secondColumn = {
+//                LazyColumn {
+//                    items(100) { index ->
+//                        Text(text = "Item: $index")
+//                    }
+//                }
+//            }
+//
+//        )
 
     }
 

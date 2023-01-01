@@ -1,11 +1,7 @@
 package com.arjental.taimukka.entities.data.user_stats
 
-import com.arjental.taimukka.entities.data.cash.ApplicationInfoCash
-import com.arjental.taimukka.entities.data.cash.ApplicationStatsCash
-import com.arjental.taimukka.entities.data.cash.ApplicationTimeMarksCash
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppDomain
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppTimeMarkDomain
-import java.util.*
 
 class LaunchedApp(
     val appPackage: String,

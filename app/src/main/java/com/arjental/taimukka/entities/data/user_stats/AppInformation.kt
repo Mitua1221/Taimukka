@@ -1,5 +1,7 @@
 package com.arjental.taimukka.entities.data.user_stats
 
-class AppInformation(
-    val name: String = "-"
+data class AppInformation(
+    val name: String = "-",
+    val packageName: String,
+    val isAppSystem: Boolean,
 )

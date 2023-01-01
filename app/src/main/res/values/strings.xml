@@ -4,5 +4,9 @@
     <string name="home_tab">Home</string>
     <string name="app_list_tab">Application list</string>
 
+    <string name="search_hint">Search</string>
+
+
+
 
 </resources>

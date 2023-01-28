@@ -3,38 +3,37 @@ package com.arjental.taimukka
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import cafe.adriel.voyager.navigator.tab.CurrentTab
-import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
-import cafe.adriel.voyager.navigator.tab.Tab
-import cafe.adriel.voyager.navigator.tab.TabNavigator
-import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListTab
-import com.arjental.taimukka.presentaion.ui.screens.main.MainTab
 import com.arjental.taimukka.presentaion.ui.theme.TaimukkaTheme
 import com.arjental.taimukka.other.utils.components.activity.TaimukkaDaggerActivity
 import com.arjental.taimukka.other.utils.factories.viewmodel.Inject
 import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaApplication
+import com.arjental.taimukka.presentaion.ui.screens.splash.SplashVM
 import com.google.accompanist.adaptive.calculateDisplayFeatures
 
 
 class TaimukkaActivity : TaimukkaDaggerActivity() {
 
+    private val splashValidateViewModel by viewModels<SplashVM> { viewModelFactory }
+
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen().apply {
+            setKeepOnScreenCondition {
+                splashValidateViewModel.ensureSplashActive()
+            }
+        }
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val windowInsetsController =
@@ -55,6 +54,15 @@ class TaimukkaActivity : TaimukkaDaggerActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        //bind service check permissions
+    }
+
+    override fun onPause() {
+        super.onPause()
+        //unbind service check permissions
+    }
 
 }
 

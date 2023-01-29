@@ -1,12 +1,22 @@
 <resources>
     <string name="app_name">Taimukka</string>
 
+    <string name="onboarding_greetings">greets you</string>
+    <string name="onboarding_appeal">I will help you to keep focus on life around</string>
+    <string name="onboarding_appeal_permissions">To start working with applications, you need to allow access to certain functions of the phone, this will allow us to personalize recommendations for you and make the application fully functional.</string>
+    <string name="onboarding_appeal_start">Start</string>
+
+
     <string name="home_tab">Home</string>
     <string name="app_list_tab">Application list</string>
 
     <string name="search_hint">Search</string>
 
+    <!--permissions-->
+    <string name="permission">Permission</string>
+    <string name="permission_system">System permission</string>
 
+    <string name="permission_ucm_desc">Permission is required to obtain statistics of the applications used.\nThis data will never leave your device.</string>
 
 
 </resources>

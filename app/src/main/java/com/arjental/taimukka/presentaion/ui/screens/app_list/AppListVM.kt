@@ -5,25 +5,23 @@ import androidx.lifecycle.viewModelScope
 import com.arjental.taimukka.domain.uc.ApplicationsStatsUC
 import com.arjental.taimukka.entities.presentaion.applist.toPresentation
 import com.arjental.taimukka.other.utils.components.TViewModel
+import com.arjental.taimukka.other.utils.dispatchers.TDispatcher
 import com.arjental.taimukka.other.utils.flow.handleErrors
 import com.arjental.taimukka.other.utils.resource.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class AppListVM @Inject constructor(
     private val applicationsStatsUC: ApplicationsStatsUC,
-    private val context: Context
-) : TViewModel<AppListState, AppListEffect>() {
-
-    private val state: MutableStateFlow<AppListState> = MutableStateFlow(AppListState.PagePreparing())
-
-    override fun collectState(): StateFlow<AppListState> = state.asStateFlow()
+    private val context: Context,
+    private val dispatchers: TDispatcher,
+) : TViewModel<AppListState, AppListEffect>(
+    initialState = AppListState.PagePreparing(),
+    dispatchers = dispatchers,
+) {
 
     private var loadApplicationStatsNotRun = false
     private var loadApplicationStatsJob: Job? = null
@@ -36,22 +34,19 @@ class AppListVM @Inject constructor(
                 applicationsStatsUC.collect().handleErrors(defaultOnError = emptyList()).collectLatest {
                     when (it) {
                         is Resource.Loading -> {
-                            state.value =  AppListState.PageLoading(emptyList())
+                            modifyState(AppListState.PageLoading(emptyList()))
                         }
                         is Resource.Error -> {
-                            state.value =  AppListState.PageError()
+                            modifyState(AppListState.PageError())
                         }
                         is Resource.Success -> {
-                            state.value =  AppListState.PageLoaded( it.data.toPresentation(context))
+                            modifyState(AppListState.PageLoaded(it.data.toPresentation(context)))
                         }
                     }
                 }
             }
         }
     }
-
-
-
 
 
 }

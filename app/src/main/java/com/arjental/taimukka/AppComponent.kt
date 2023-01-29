@@ -16,6 +16,7 @@ import javax.inject.Singleton
         DomainModule::class,
         ScreenModule::class,
         DataModule::class,
+        CoroutineModule::class,
     ]
 )
 interface AppComponent : AndroidInjector<DaggerApplication> {

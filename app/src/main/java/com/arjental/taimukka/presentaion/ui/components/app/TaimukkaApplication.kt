@@ -9,18 +9,23 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.window.layout.DisplayFeature
 import androidx.window.layout.FoldingFeature
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.CurrentTab
-import cafe.adriel.voyager.navigator.tab.TabNavigator
-import com.arjental.taimukka.presentaion.ui.components.navigations.BottomNavigationBar
-import com.arjental.taimukka.presentaion.ui.components.navigations.startTab
+import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalComponentType
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalDisplayFeatures
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationContentPosition
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationType
+import com.arjental.taimukka.presentaion.ui.screens.empty.EmptyScreen
+import com.arjental.taimukka.presentaion.ui.screens.onboarding.OnBoardingScreen
+import com.arjental.taimukka.presentaion.ui.screens.splash.SplashState
+import com.arjental.taimukka.presentaion.ui.screens.splash.SplashVM
+import com.arjental.taimukka.presentaion.ui.screens.tabs.TabsRootScreen
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -109,33 +114,32 @@ fun TaimukkaApplication(
 
 }
 
-data class Movie(val title: String, val year: Int)
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NavigationWrapper() {
 
-    TabNavigator(startTab) {
-        when (LocalNavigationType.current) {
-            NavigationType.BOTTOM_NAVIGATION -> {
-                BottomNavigationBar()
-            }
-            NavigationType.NAVIGATION_RAIL -> {
-                ModalNavigationRailDrawer()
-            }
-            NavigationType.PERMANENT_NAVIGATION_DRAWER -> {
-                PermanentNavigationDrawer(drawerContent = {
-                    PermanentNavigationDrawerContent(
-                        selectedDestination = "selectedDestination",
-                        navigationContentPosition = LocalNavigationContentPosition.current,
-                    )
-                }) {
-                    AppContent()
-                }
+    val splashVM = daggerViewModel<SplashVM>()
 
+    Navigator(screen = EmptyScreen()) { navigator ->
+
+        val splashViewModelState = splashVM.collectState().collectAsState().value
+
+        when (splashViewModelState) {
+            is SplashState.Loading -> Unit
+            is SplashState.State -> {
+                when {
+                    splashViewModelState.showOnBoarding -> {
+                        navigator.replaceAll(OnBoardingScreen(
+                            onBoardingList = splashViewModelState.onBoardingScreens
+                        ))
+                    }
+                    else -> navigator.replaceAll(TabsRootScreen())
+                }
             }
         }
+
+        navigator.lastItem.Content()
+
     }
 
 }

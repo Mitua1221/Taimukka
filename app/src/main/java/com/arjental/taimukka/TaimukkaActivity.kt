@@ -1,6 +1,5 @@
 package com.arjental.taimukka
 
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -8,18 +7,21 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import com.arjental.taimukka.presentaion.ui.theme.TaimukkaTheme
 import com.arjental.taimukka.other.utils.components.activity.TaimukkaDaggerActivity
 import com.arjental.taimukka.other.utils.factories.viewmodel.Inject
 import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaApplication
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalTActivity
 import com.arjental.taimukka.presentaion.ui.screens.splash.SplashVM
+import com.arjental.taimukka.presentaion.ui.theme.TaimukkaTheme
 import com.google.accompanist.adaptive.calculateDisplayFeatures
 
 
@@ -41,14 +43,16 @@ class TaimukkaActivity : TaimukkaDaggerActivity() {
         windowInsetsController?.isAppearanceLightNavigationBars = true
 
         setContent {
-            TaimukkaTheme {
-                val windowSize = calculateWindowSizeClass(this)
-                val displayFeatures = calculateDisplayFeatures(this)
-                Inject(viewModelFactory) {
-                    TaimukkaApplication(
-                        windowSize = windowSize,
-                        displayFeatures = displayFeatures,
-                    )
+            CompositionLocalProvider(LocalTActivity provides this) {
+                TaimukkaTheme {
+                    val windowSize = calculateWindowSizeClass(this)
+                    val displayFeatures = calculateDisplayFeatures(this)
+                    Inject(viewModelFactory) {
+                        TaimukkaApplication(
+                            windowSize = windowSize,
+                            displayFeatures = displayFeatures,
+                        )
+                    }
                 }
             }
         }

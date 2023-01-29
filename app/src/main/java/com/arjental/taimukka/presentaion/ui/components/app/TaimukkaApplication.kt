@@ -16,10 +16,7 @@ import androidx.window.layout.DisplayFeature
 import androidx.window.layout.FoldingFeature
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.CurrentTab
-import cafe.adriel.voyager.navigator.tab.TabNavigator
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
-import com.arjental.taimukka.presentaion.ui.components.navigations.BottomNavigationBar
-import com.arjental.taimukka.presentaion.ui.components.navigations.startTab
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalComponentType
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalDisplayFeatures
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationContentPosition
@@ -28,6 +25,7 @@ import com.arjental.taimukka.presentaion.ui.screens.empty.EmptyScreen
 import com.arjental.taimukka.presentaion.ui.screens.onboarding.OnBoardingScreen
 import com.arjental.taimukka.presentaion.ui.screens.splash.SplashState
 import com.arjental.taimukka.presentaion.ui.screens.splash.SplashVM
+import com.arjental.taimukka.presentaion.ui.screens.tabs.TabsRootScreen
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -130,35 +128,17 @@ private fun NavigationWrapper() {
             is SplashState.Loading -> Unit
             is SplashState.State -> {
                 when {
-                    splashViewModelState.firstLaunch || splashViewModelState.needRequestPermissions -> {
-                        navigator.replaceAll(OnBoardingScreen())
+                    splashViewModelState.showOnBoarding -> {
+                        navigator.replaceAll(OnBoardingScreen(
+                            onBoardingList = splashViewModelState.onBoardingScreens
+                        ))
                     }
-                    else -> {
-                        TabNavigator(startTab) {
-                            when (LocalNavigationType.current) {
-                                NavigationType.BOTTOM_NAVIGATION -> {
-                                    BottomNavigationBar()
-                                }
-                                NavigationType.NAVIGATION_RAIL -> {
-                                    ModalNavigationRailDrawer()
-                                }
-                                NavigationType.PERMANENT_NAVIGATION_DRAWER -> {
-                                    PermanentNavigationDrawer(drawerContent = {
-                                        PermanentNavigationDrawerContent(
-                                            selectedDestination = "selectedDestination",
-                                            navigationContentPosition = LocalNavigationContentPosition.current,
-                                        )
-                                    }) {
-                                        AppContent()
-                                    }
-
-                                }
-                            }
-                        }
-                    }
+                    else -> navigator.replaceAll(TabsRootScreen())
                 }
             }
         }
+
+        navigator.lastItem.Content()
 
     }
 

@@ -2,9 +2,14 @@ package com.arjental.taimukka.domain.uc
 
 import android.app.AppOpsManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Process
+import android.provider.Settings
+import androidx.annotation.StringRes
+import com.arjental.taimukka.R
 import dagger.android.support.DaggerAppCompatActivity
+import kotlinx.serialization.Serializable
 import javax.inject.Inject
 
 class CheckPermissionsUC @Inject constructor(
@@ -30,6 +35,17 @@ class CheckPermissionsUC @Inject constructor(
 
 }
 
-sealed class TPermission (mandatory: Boolean) {
-    class CHECK_USAGE_STATS: TPermission(mandatory = true)
+@Serializable
+sealed class TPermission(
+    val mandatory: Boolean,
+    val system: Boolean,
+    @StringRes val description: Int,
+) {
+    abstract fun requestSystemPermission(activityContext: Context)
+    @Serializable
+    class CHECK_USAGE_STATS : TPermission(mandatory = true, system = true, description = R.string.permission_ucm_desc) {
+        override fun requestSystemPermission(activityContext: Context) {
+            activityContext.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+        }
+    }
 }

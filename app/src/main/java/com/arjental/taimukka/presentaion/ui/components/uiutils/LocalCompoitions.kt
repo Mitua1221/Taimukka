@@ -2,7 +2,9 @@ package com.arjental.taimukka.presentaion.ui.components.uiutils
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.window.layout.DisplayFeature
+import com.arjental.taimukka.TaimukkaActivity
 import com.arjental.taimukka.other.utils.components.activity.TaimukkaDaggerActivity
+import com.arjental.taimukka.other.utils.dispatchers.TDispatcher
 import com.arjental.taimukka.presentaion.ui.components.app.ContentType
 import com.arjental.taimukka.presentaion.ui.components.app.NavigationContentPosition
 import com.arjental.taimukka.presentaion.ui.components.app.NavigationType
@@ -27,7 +29,11 @@ val LocalNavigationContentPosition = staticCompositionLocalOf<NavigationContentP
     noLocalProvidedFor("LocalNavigationContentPosition")
 }
 
-val LocalTActivity = staticCompositionLocalOf<TaimukkaDaggerActivity> {
-    noLocalProvidedFor("TaimukkaDaggerActivity")
+val LocalTActivity = staticCompositionLocalOf<TaimukkaActivity> {
+    noLocalProvidedFor("TaimukkaActivity")
+}
+
+val LocalDispatchers = staticCompositionLocalOf<TDispatcher> {
+    noLocalProvidedFor("TDispatcher")
 }
 

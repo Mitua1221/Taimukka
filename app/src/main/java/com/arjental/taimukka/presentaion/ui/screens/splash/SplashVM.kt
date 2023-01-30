@@ -2,6 +2,7 @@ package com.arjental.taimukka.presentaion.ui.screens.splash
 
 import com.arjental.taimukka.domain.uc.CheckPermissionsUC
 import com.arjental.taimukka.domain.uc.FirstLaunchUC
+import com.arjental.taimukka.domain.uc.TPermission
 import com.arjental.taimukka.other.utils.components.TViewModel
 import com.arjental.taimukka.other.utils.dispatchers.TDispatcher
 import com.arjental.taimukka.presentaion.ui.screens.onboarding.OnBoardingScreenTypes
@@ -48,6 +49,12 @@ class SplashVM @Inject constructor(
         }
     }
 
+    fun lastPermissionGranted() {
+        modifyState { SplashState.State(showOnBoarding = false) }
+    }
+
     fun ensureSplashActive(): Boolean = stateValue() is SplashState.Loading
+
+    suspend fun ensurePermissionGranted(permissionType: TPermission): Boolean = checkPermissions.checkPermission(permissionType)
 
 }

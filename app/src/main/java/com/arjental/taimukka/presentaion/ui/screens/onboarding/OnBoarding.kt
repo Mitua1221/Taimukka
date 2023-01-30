@@ -7,69 +7,56 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import com.arjental.taimukka.TaimukkaActivity
+import com.arjental.taimukka.domain.uc.TPermission
+import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
 import com.arjental.taimukka.presentaion.ui.components.app.TBoxBackground
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalTActivity
+import com.arjental.taimukka.presentaion.ui.components.uiutils.rememberTCoroutineScope
+import com.arjental.taimukka.presentaion.ui.screens.splash.SplashVM
 import kotlinx.coroutines.launch
 
 @Preview
 @Composable
 fun Preview() {
-    OnBoarding(
-        onBoardingList = listOf(
-         //    OnBoardingScreenTypes.FirstLaunch(),
-            OnBoardingScreenTypes.ApplicationDescription(),
-//        OnBoardingScreenTypes.PermissionsRequest(
-//            permission = TPermission.CHECK_USAGE_STATS()
-//        )
+    val activity = TaimukkaActivity()
+    CompositionLocalProvider(LocalTActivity provides activity,
+        LocalLifecycleOwner provides LifecycleOwner { activity.lifecycle }
+    ) {
+        OnBoarding(
+            onBoardingList = listOf(
+//             OnBoardingScreenTypes.FirstLaunch(),
+//            OnBoardingScreenTypes.ApplicationDescription(),
+                OnBoardingScreenTypes.PermissionsRequest(
+                    permission = TPermission.CHECK_USAGE_STATS()
+                )
+            )
         )
-    )
+    }
 }
 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnBoarding(
-
-    //lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     onBoardingList: List<OnBoardingScreenTypes>
-
 ) {
-
-
-    //val activity = LocalTActivity.current
-
-//    val splashVM = daggerViewModel<SplashVM>()
-//
-//    val currentOnResume by rememberUpdatedState {
-//        splashVM.ensureSplashActive()
-//    }
-//
-//    LocalNavigator.current
-//
-//    DisposableEffect(lifecycleOwner) {
-//        val observer = LifecycleEventObserver { _, event ->
-//            if (event == Lifecycle.Event.ON_RESUME) {
-//                currentOnResume()
-//            }
-//        }
-//        lifecycleOwner.lifecycle.addObserver(observer)
-//        onDispose {
-//            lifecycleOwner.lifecycle.removeObserver(observer)
-//        }
-//    }
-
-    TBoxBackground(isFaceOnBackground = true) {
+    TBoxBackground(isFaceOnBackground = true, bottomText = true) {
 
         val horizontalPagerState = rememberPagerState()
-        val scope = rememberCoroutineScope()
+        val scope = rememberTCoroutineScope()
 
         val navigateNext: (Int) -> Unit = { page ->
             scope.launch {
@@ -82,16 +69,20 @@ fun OnBoarding(
         HorizontalPager(
             state = horizontalPagerState,
             pageCount = onBoardingList.size,
-
         ) { page ->
-            Box(modifier = Modifier.fillMaxHeight().padding(horizontal = 48.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(horizontal = 48.dp)
+            ) {
                 Column(
                     modifier = Modifier.align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    when (onBoardingList[page]) {
+                    when (val type = onBoardingList[page]) {
                         is OnBoardingScreenTypes.FirstLaunch -> FirstLaunch()
-                        is OnBoardingScreenTypes.ApplicationDescription -> ApplicationDescription(onNextClick = { navigateNext(page) })
+                        is OnBoardingScreenTypes.ApplicationDescription -> ApplicationDescription(onNextClick = { navigateNext(page) }, last = page == onBoardingList.lastIndex)
+                        is OnBoardingScreenTypes.PermissionsRequest -> PermissionRequest(permissionType = type.permission, last = page == onBoardingList.lastIndex)
                         else -> Unit
                     }
                 }
@@ -117,6 +108,7 @@ private fun FirstLaunch() {
 @Composable
 private fun ApplicationDescription(
     onNextClick: () -> Unit,
+    last: Boolean,
 ) {
     Text(
         textAlign = TextAlign.Center,
@@ -139,7 +131,10 @@ private fun ApplicationDescription(
         style = MaterialTheme.typography.bodyMedium,
         letterSpacing = -0.25.sp
     )
-    Button(modifier = Modifier.padding(top = 40.dp), onClick = onNextClick) {
+    val splashVM = daggerViewModel<SplashVM>()
+    Button(modifier = Modifier.padding(top = 40.dp), onClick = {
+        if (last) splashVM.lastPermissionGranted() else onNextClick()
+    }) {
         Text(
             textAlign = TextAlign.Center,
             text = stringResource(id = com.arjental.taimukka.R.string.onboarding_appeal_start),
@@ -147,4 +142,58 @@ private fun ApplicationDescription(
             style = MaterialTheme.typography.labelLarge,
         )
     }
+}
+
+@Composable
+private fun PermissionRequest(
+    permissionType: TPermission,
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+    last: Boolean,
+) {
+    Text(
+        textAlign = TextAlign.Center,
+        text = stringResource(id = com.arjental.taimukka.R.string.onboarding_permission),
+        color = MaterialTheme.colorScheme.onPrimaryContainer,
+        style = MaterialTheme.typography.displaySmall
+    )
+    Text(
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(top = 16.dp),
+        text = stringResource(id = permissionType.description),
+        color = MaterialTheme.colorScheme.onSurface,
+        style = MaterialTheme.typography.bodyLarge
+    )
+    val activity = LocalTActivity.current
+
+    val splashVM = daggerViewModel<SplashVM>()
+    val scope = rememberTCoroutineScope()
+
+    var permissionGranted by remember { mutableStateOf(false) }
+
+    if (last && permissionGranted) splashVM.lastPermissionGranted()
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch {
+                    permissionGranted = splashVM.ensurePermissionGranted(permissionType)
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    Button(enabled = !permissionGranted, modifier = Modifier.padding(top = 40.dp), onClick = { permissionType.requestSystemPermission(activity) }) {
+        Text(
+            textAlign = TextAlign.Center,
+            text = stringResource(id = com.arjental.taimukka.R.string.onboarding_allow),
+            color = MaterialTheme.colorScheme.onPrimary,
+            style = MaterialTheme.typography.labelLarge,
+        )
+    }
+
+
 }

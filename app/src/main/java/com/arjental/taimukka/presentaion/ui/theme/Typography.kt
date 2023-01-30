@@ -128,3 +128,11 @@ val typography = Typography(
     ),
 )
 
+fun TextStyle.toOnBoardingSign() = this.copy(
+    fontWeight = FontWeight.W400,
+    fontFamily = fontFamily,
+    fontSize = 25.8.sp,
+    lineHeight = 44.5.sp,
+    letterSpacing = 15.sp,
+)
+

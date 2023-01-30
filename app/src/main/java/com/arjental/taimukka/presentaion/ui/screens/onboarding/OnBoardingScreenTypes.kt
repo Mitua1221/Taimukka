@@ -3,7 +3,7 @@ package com.arjental.taimukka.presentaion.ui.screens.onboarding
 import com.arjental.taimukka.domain.uc.TPermission
 
 @kotlinx.serialization.Serializable
-sealed interface OnBoardingScreenTypes {
+sealed interface OnBoardingScreenTypes : java.io.Serializable {
 
     @kotlinx.serialization.Serializable
     class FirstLaunch(

@@ -10,17 +10,13 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.window.layout.DisplayFeature
 import androidx.window.layout.FoldingFeature
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.CurrentTab
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
-import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalComponentType
-import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalDisplayFeatures
-import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationContentPosition
-import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationType
+import com.arjental.taimukka.presentaion.ui.components.uiutils.*
 import com.arjental.taimukka.presentaion.ui.screens.empty.EmptyScreen
 import com.arjental.taimukka.presentaion.ui.screens.onboarding.OnBoardingScreen
 import com.arjental.taimukka.presentaion.ui.screens.splash.SplashState
@@ -133,7 +129,9 @@ private fun NavigationWrapper() {
                             onBoardingList = splashViewModelState.onBoardingScreens
                         ))
                     }
-                    else -> navigator.replaceAll(TabsRootScreen())
+                    else -> {
+                        navigator.replaceAll(TabsRootScreen())
+                    }
                 }
             }
         }
@@ -148,7 +146,7 @@ private fun NavigationWrapper() {
 @Composable
 fun ModalNavigationRailDrawer() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
+    val scope = rememberTCoroutineScope()
 
     ModalNavigationDrawer(
         drawerContent = {

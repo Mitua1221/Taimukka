@@ -19,6 +19,7 @@ import androidx.core.view.WindowCompat
 import com.arjental.taimukka.other.utils.components.activity.TaimukkaDaggerActivity
 import com.arjental.taimukka.other.utils.factories.viewmodel.Inject
 import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaApplication
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalDispatchers
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalTActivity
 import com.arjental.taimukka.presentaion.ui.screens.splash.SplashVM
 import com.arjental.taimukka.presentaion.ui.theme.TaimukkaTheme
@@ -43,7 +44,10 @@ class TaimukkaActivity : TaimukkaDaggerActivity() {
         windowInsetsController?.isAppearanceLightNavigationBars = true
 
         setContent {
-            CompositionLocalProvider(LocalTActivity provides this) {
+            CompositionLocalProvider(
+                LocalTActivity provides this,
+                LocalDispatchers provides dispatchers.get()
+            ) {
                 TaimukkaTheme {
                     val windowSize = calculateWindowSizeClass(this)
                     val displayFeatures = calculateDisplayFeatures(this)

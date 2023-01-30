@@ -22,6 +22,12 @@ class CheckPermissionsUC @Inject constructor(
         return needToRequestPermissions
     }
 
+    suspend fun checkPermission(type: TPermission) =
+        when (type) {
+            is TPermission.CHECK_USAGE_STATS -> hasUsageStatsPermission()
+        }
+
+
     private suspend fun hasUsageStatsPermission(): Boolean {
         val appOpsManager = context.getSystemService(DaggerAppCompatActivity.APP_OPS_SERVICE) as AppOpsManager
         val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -40,10 +46,10 @@ sealed class TPermission(
     val mandatory: Boolean,
     val system: Boolean,
     @StringRes val description: Int,
-) {
+): java.io.Serializable {
     abstract fun requestSystemPermission(activityContext: Context)
     @Serializable
-    class CHECK_USAGE_STATS : TPermission(mandatory = true, system = true, description = R.string.permission_ucm_desc) {
+    class CHECK_USAGE_STATS : TPermission(mandatory = true, system = true, description = R.string.permission_ucm) {
         override fun requestSystemPermission(activityContext: Context) {
             activityContext.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
         }

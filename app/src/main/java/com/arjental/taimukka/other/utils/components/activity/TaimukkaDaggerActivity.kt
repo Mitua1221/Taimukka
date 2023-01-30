@@ -3,6 +3,7 @@ package com.arjental.taimukka.other.utils.components.activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.ViewModelProvider
+import com.arjental.taimukka.other.utils.dispatchers.TDispatcher
 import dagger.android.AndroidInjection
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -14,6 +15,7 @@ import javax.inject.Inject
 open class TaimukkaDaggerActivity : ComponentActivity(), HasAndroidInjector {
 
     @Inject lateinit var viewModelFactory: ViewModelProvider.Factory
+    @Inject lateinit var dispatchers: dagger.Lazy<TDispatcher>
     @Inject lateinit var androidInjector: DispatchingAndroidInjector<Any>
 
     override fun onCreate(savedInstanceState: Bundle?) {

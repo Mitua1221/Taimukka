@@ -1,4 +1,4 @@
-package com.arjental.taimukka.presentaion.ui.screens.app_list
+package com.arjental.taimukka.presentaion.ui.screens.tabs.app_list
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable

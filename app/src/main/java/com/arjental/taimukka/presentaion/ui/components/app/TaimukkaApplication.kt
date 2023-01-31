@@ -145,42 +145,39 @@ private fun NavigationWrapper() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModalNavigationRailDrawer() {
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberTCoroutineScope()
-
-    ModalNavigationDrawer(
-        drawerContent = {
-            ModalNavigationDrawerContent(
-                selectedDestination = "selectedDestination",
-                navigationContentPosition = LocalNavigationContentPosition.current,
-                onDrawerClicked = {
-                    scope.launch {
-                        drawerState.close()
-                    }
-                }
-            )
-        },
-        drawerState = drawerState
-    ) {
-        AppContent {
-            scope.launch {
-                drawerState.open()
-            }
-        }
-    }
+//    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+//    val scope = rememberTCoroutineScope()
+//
+//    ModalNavigationDrawer(
+//        drawerContent = {
+//            ModalNavigationDrawerContent(
+//                selectedDestination = "selectedDestination",
+//                navigationContentPosition = LocalNavigationContentPosition.current,
+//                onDrawerClicked = {
+//                    scope.launch {
+//                        drawerState.close()
+//                    }
+//                }
+//            )
+//        },
+//        drawerState = drawerState
+//    ) {
+//        AppContent {
+//            scope.launch {
+//                drawerState.open()
+//            }
+//        }
+//    }
 
 }
 
 @Composable
 fun AppContent(
     modifier: Modifier = Modifier,
-    onDrawerClicked: () -> Unit = {}
 ) {
     Row(modifier = modifier.fillMaxSize()) {
-        AnimatedVisibility(visible = LocalNavigationType.current == NavigationType.NAVIGATION_RAIL) {
-            NavigationRail(
-                onDrawerClicked = onDrawerClicked,
-            )
+        AnimatedVisibility(visible = LocalNavigationType.current == NavigationType.NAVIGATION_RAIL || LocalNavigationType.current == NavigationType.PERMANENT_NAVIGATION_DRAWER) {
+            NavigationRail()
         }
         Column(
             modifier = Modifier

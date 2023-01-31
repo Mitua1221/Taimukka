@@ -1,4 +1,4 @@
-package com.arjental.taimukka.presentaion.ui.screens.main
+package com.arjental.taimukka.presentaion.ui.screens.tabs.stats
 
 import androidx.lifecycle.viewModelScope
 import com.arjental.taimukka.domain.uc.ApplicationsStatsUC
@@ -12,11 +12,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class MainViewModel @Inject constructor(
+class StatsVM @Inject constructor(
     private val applicationsStatsUC: ApplicationsStatsUC,
     private val dispatchers: TDispatcher,
-) : TViewModel<MainState, MainEffect>(
-    initialState = MainState.PagePreparing(), dispatchers = dispatchers,
+) : TViewModel<StatsState, StatsEffect>(
+    initialState = StatsState.PagePreparing(), dispatchers = dispatchers,
 ) {
 
     private var loadApplicationStatsNotRun = false
@@ -30,13 +30,13 @@ class MainViewModel @Inject constructor(
                 applicationsStatsUC.collect().handleErrors(defaultOnError = emptyList()).collectLatest {
                     when (it) {
                         is Resource.Loading -> {
-                            modifyState(MainState.PageLoading())
+                            modifyState(StatsState.PageLoading())
                         }
                         is Resource.Error -> {
-                            modifyState(MainState.PageError())
+                            modifyState(StatsState.PageError())
                         }
                         is Resource.Success -> {
-                            modifyState(MainState.PageLoaded(it.data.map { it.appPackage }))
+                            modifyState(StatsState.PageLoaded(it.data.map { it.appPackage }))
                         }
                     }
                 }

@@ -1,32 +1,24 @@
-package com.arjental.taimukka.presentaion.ui.screens.main
+package com.arjental.taimukka.presentaion.ui.screens.tabs.stats
 
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
-import androidx.window.layout.DisplayFeature
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import com.arjental.taimukka.R
-import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
-import com.arjental.taimukka.presentaion.ui.components.app.ContentType
-import com.arjental.taimukka.presentaion.ui.components.app.NavigationType
-import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaWrapLines
-import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalComponentType
-import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListScreen
+import com.arjental.taimukka.presentaion.ui.images.TIcons
+import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Stats
 
-class MainTab() : Tab {
+class StatsTab() : Tab {
 
     override val options: TabOptions
         @Composable
         get() {
-            val title = stringResource(R.string.home_tab)
-            val icon = rememberVectorPainter(Icons.Filled.Home)
+            val title = stringResource(R.string.tab_home)
+            val icon = rememberVectorPainter(TIcons.Stats)
 
             return remember {
                 TabOptions(

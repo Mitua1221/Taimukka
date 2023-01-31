@@ -26,7 +26,7 @@ class SplashVM @Inject constructor(
                     //map only permissions that not granted
                     .mapNotNull { if (it.value) it.key else null }
             }
-            val launchFirst = async { firstLaunchUC.launchFirst() }
+            val launchFirst = async { firstLaunchUC.isFirstLaunch() }
             val showOnBoarding = launchFirst.await() || permissionsToRequest.await().isNotEmpty()
             val listOnBoardingScreens = mutableListOf<OnBoardingScreenTypes>()
 
@@ -51,6 +51,7 @@ class SplashVM @Inject constructor(
 
     fun lastPermissionGranted() {
         modifyState { SplashState.State(showOnBoarding = false) }
+        launch { firstLaunchUC }
     }
 
     fun ensureSplashActive(): Boolean = stateValue() is SplashState.Loading

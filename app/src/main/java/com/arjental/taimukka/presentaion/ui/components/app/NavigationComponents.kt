@@ -21,110 +21,34 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import com.arjental.taimukka.R
+import com.arjental.taimukka.presentaion.ui.components.navigations.TabNavigationItem
 import com.arjental.taimukka.presentaion.ui.components.navigations.navigationTabs
-import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationContentPosition
-import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListTab
 
 @Composable
 fun NavigationRail(
-    onDrawerClicked: () -> Unit = {},
 ) {
     NavigationRail(
-        modifier = Modifier.fillMaxHeight(),
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(95.dp),
         containerColor = MaterialTheme.colorScheme.inverseOnSurface
     ) {
-        val navigationContentPosition = LocalNavigationContentPosition.current
-        Layout(
-            modifier = Modifier.widthIn(max = 80.dp),
-            content = {
-                Column(
-                    modifier = Modifier.layoutId(LayoutType.HEADER),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+        Column(
+            modifier = Modifier.fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
+        ) {
+            val tabNavigator = LocalTabNavigator.current
+            navigationTabs.forEach { tab ->
+                Row(
+                    modifier = Modifier
+                        .height(80.dp)
+                        .width(95.dp)
                 ) {
-                    NavigationRailItem(
-                        selected = false,
-                        onClick = onDrawerClicked,
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Menu,
-                                contentDescription = "stringResource(id = R.string.navigation_drawer)"
-                            )
-                        }
-                    )
-                    FloatingActionButton(
-                        onClick = { /*TODO*/ },
-                        modifier = Modifier.padding(top = 8.dp, bottom = 32.dp),
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "stringResource(id = R.string.edit)",
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp)) // NavigationRailHeaderPadding
-                    Spacer(Modifier.height(4.dp)) // NavigationRailVerticalPadding
-                }
-
-                Column(
-                    modifier = Modifier.layoutId(LayoutType.CONTENT),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    val tabNavigator = LocalTabNavigator.current
-                    navigationTabs.forEach { tab ->
-                        NavigationRailItem(
-                            selected = tabNavigator.current.key == tab.key,
-                            onClick = { tabNavigator.current = tab },
-                            icon = {
-                                tab.options.icon?.let {
-                                    Icon(
-                                        painter = it,
-                                        contentDescription = tab.options.title
-                                    )
-                                }
-                            }
-                        )
-                    }
-                }
-            },
-            measurePolicy = { measurables, constraints ->
-                lateinit var headerMeasurable: Measurable
-                lateinit var contentMeasurable: Measurable
-                measurables.forEach {
-                    when (it.layoutId) {
-                        LayoutType.HEADER -> headerMeasurable = it
-                        LayoutType.CONTENT -> contentMeasurable = it
-                        else -> error("Unknown layoutId encountered!")
-                    }
-                }
-
-                val headerPlaceable = headerMeasurable.measure(constraints)
-                val contentPlaceable = contentMeasurable.measure(
-                    constraints.offset(vertical = -headerPlaceable.height)
-                )
-                layout(constraints.maxWidth, constraints.maxHeight) {
-                    // Place the header, this goes at the top
-                    headerPlaceable.placeRelative(0, 0)
-
-                    // Determine how much space is not taken up by the content
-                    val nonContentVerticalSpace = constraints.maxHeight - contentPlaceable.height
-
-                    val contentPlaceableY = when (navigationContentPosition) {
-                        // Figure out the place we want to place the content, with respect to the
-                        // parent (ignoring the header for now)
-                        NavigationContentPosition.TOP -> 0
-                        NavigationContentPosition.CENTER -> nonContentVerticalSpace / 2
-                    }
-                        // And finally, make sure we don't overlap with the header.
-                        .coerceAtLeast(headerPlaceable.height)
-
-                    contentPlaceable.placeRelative(0, contentPlaceableY)
+                    TabNavigationItem(tab = tab)
                 }
             }
-        )
+        }
     }
 }
 

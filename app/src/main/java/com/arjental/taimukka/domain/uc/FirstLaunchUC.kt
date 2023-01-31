@@ -1,17 +1,14 @@
 package com.arjental.taimukka.domain.uc
 
-import android.content.Context
-import kotlinx.coroutines.delay
+import com.arjental.taimukka.data.cash.holders.AppLaunchedHolder
 import javax.inject.Inject
 
 class FirstLaunchUC @Inject constructor(
-    private val context: Context
+    private val appLaunchedHolder: AppLaunchedHolder,
 ) {
 
-    suspend fun launchFirst(): Boolean {
-        delay(2000)
-        return true
-    }
+    suspend fun isFirstLaunch(): Boolean = appLaunchedHolder.isLaunched()
 
+    suspend fun launchedFirstTime() = appLaunchedHolder.isLaunched()
 
 }

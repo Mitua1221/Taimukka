@@ -10,8 +10,6 @@ interface TDispatcher {
     val io: CoroutineDispatcher
     val default: CoroutineDispatcher
 }
-
-@Reusable
 class TDispatcherImpl @Inject constructor(): TDispatcher {
     override val main: CoroutineDispatcher = Dispatchers.Main.immediate
     override val io: CoroutineDispatcher = Dispatchers.IO

@@ -12,6 +12,7 @@ import javax.inject.Singleton
     includes = [
         AndroidSupportInjectionModule::class,
         VMModule::class,
+        CoroutineModule::class,
     ]
 )
 class AppModule {

@@ -16,7 +16,6 @@ import javax.inject.Singleton
         DomainModule::class,
         ScreenModule::class,
         DataModule::class,
-        CoroutineModule::class,
     ]
 )
 interface AppComponent : AndroidInjector<DaggerApplication> {
@@ -24,7 +23,6 @@ interface AppComponent : AndroidInjector<DaggerApplication> {
     override fun inject(instance: DaggerApplication)
     fun inject(app: App)
     fun inject(context: Context)
-    //fun inject(taimukkaDaggerActivity: TaimukkaDaggerActivity)
 
     @Component.Builder
     interface Builder {

@@ -1,4 +1,4 @@
-package com.arjental.taimukka.presentaion.ui.screens.app_list
+package com.arjental.taimukka.presentaion.ui.screens.tabs.app_list
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -15,14 +15,17 @@ import com.arjental.taimukka.R
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
 import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaWrapLines
 import com.arjental.taimukka.presentaion.ui.components.list.AppList
+import com.arjental.taimukka.presentaion.ui.images.TIcons
+import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Applist
+import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Stats
 
 class AppListTab : Tab {
 
     override val options: TabOptions
         @Composable
         get() {
-            val title = stringResource(R.string.app_list_tab)
-            val icon = rememberVectorPainter(Icons.Filled.List)
+            val title = stringResource(R.string.tab_applist)
+            val icon = rememberVectorPainter(TIcons.Applist)
 
             return remember {
                 TabOptions(

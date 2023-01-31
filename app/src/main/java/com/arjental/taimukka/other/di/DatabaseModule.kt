@@ -10,8 +10,7 @@ import javax.inject.Singleton
 @Module
 open class DatabaseModule {
 
-    private val FILER_DATABASE_NAME: String
-        get() = "FILER_DATABASE_NAME"
+    private val FILER_DATABASE_NAME: String = "FILER_DATABASE_NAME"
 
     @Provides
     @Singleton

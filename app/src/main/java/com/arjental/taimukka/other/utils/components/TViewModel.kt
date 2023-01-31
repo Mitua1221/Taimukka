@@ -24,7 +24,7 @@ open class TViewModel<State, Effect> @Inject constructor(
     val collectEffect = _collectEffect.receiveAsFlow()
 
     private val handler = CoroutineExceptionHandler { context, exception ->
-
+        throw exception
     }
 
     fun TViewModel<State, Effect>.launch(

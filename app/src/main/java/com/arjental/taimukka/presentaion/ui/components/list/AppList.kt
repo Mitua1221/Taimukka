@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.arjental.taimukka.entities.presentaion.applist.AppListItemPres
 import com.arjental.taimukka.presentaion.ui.components.loading.CircularProgressIndicator
 import com.arjental.taimukka.presentaion.ui.components.search.SearchLayout
-import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListState
+import com.arjental.taimukka.presentaion.ui.screens.tabs.app_list.AppListState
 
 
 @Composable

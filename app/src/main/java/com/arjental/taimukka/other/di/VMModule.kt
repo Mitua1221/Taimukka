@@ -1,9 +1,9 @@
 package com.arjental.taimukka.other.di
 
 import androidx.lifecycle.ViewModel
-import com.arjental.taimukka.presentaion.ui.screens.main.MainViewModel
+import com.arjental.taimukka.presentaion.ui.screens.tabs.stats.StatsVM
 import com.arjental.taimukka.other.utils.factories.viewmodel.ViewModelKey
-import com.arjental.taimukka.presentaion.ui.screens.app_list.AppListVM
+import com.arjental.taimukka.presentaion.ui.screens.tabs.app_list.AppListVM
 import com.arjental.taimukka.presentaion.ui.screens.splash.SplashVM
 import dagger.Binds
 import dagger.Module
@@ -16,8 +16,8 @@ interface VMModule {
 
     @Binds
     @IntoMap
-    @ViewModelKey(MainViewModel::class)
-    fun bindMainViewModel(viewModel: MainViewModel): ViewModel
+    @ViewModelKey(StatsVM::class)
+    fun bindMainViewModel(viewModel: StatsVM): ViewModel
 
     @Binds
     @IntoMap

@@ -28,9 +28,7 @@ class SettingsTab() : Tab {
         }
 
     @Composable
-    override fun Content() {
-    }
-
+    override fun Content() = Settings()
 
 }
 

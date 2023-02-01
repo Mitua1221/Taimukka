@@ -1,8 +1,6 @@
 package com.arjental.taimukka.presentaion.ui.screens.tabs.app_list
 
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -13,11 +11,10 @@ import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import com.arjental.taimukka.R
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
-import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaWrapLines
+import com.arjental.taimukka.presentaion.ui.components.app.TWrapLines
 import com.arjental.taimukka.presentaion.ui.components.list.AppList
 import com.arjental.taimukka.presentaion.ui.images.TIcons
 import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Applist
-import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Stats
 
 class AppListTab : Tab {
 
@@ -42,7 +39,7 @@ class AppListTab : Tab {
         val appListVM = daggerViewModel<AppListVM>()
         appListVM.loadApplicationStats()
 
-        TaimukkaWrapLines(
+        TWrapLines(
             firstColumn = {
                 val applicationsListState = appListVM.collectState().collectAsState().value
                 AppList(applicationsListState)

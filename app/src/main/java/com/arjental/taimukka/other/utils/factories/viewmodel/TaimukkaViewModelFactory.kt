@@ -6,7 +6,6 @@ import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
 
-@Singleton
 @Suppress("UNCHECKED_CAST")
 class TaimukkaViewModelFactory @Inject constructor(
     private val viewModels: MutableMap<Class<out ViewModel>,

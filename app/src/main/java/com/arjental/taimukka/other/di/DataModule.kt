@@ -18,5 +18,8 @@ interface DataModule {
     @Binds
     fun bindApplicationsStatsHolder(applicationsStatsHolderImpl: ApplicationsStatsHolderImpl): ApplicationsStatsHolder
 
+    @Binds
+    fun bindSettingsHolder(settingsHolderImpl: SettingsHolderImpl): SettingsHolder
+
 }
 

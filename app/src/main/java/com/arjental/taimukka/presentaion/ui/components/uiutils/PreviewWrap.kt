@@ -4,7 +4,6 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.tooling.preview.Preview
 import com.arjental.taimukka.TaimukkaActivity
 import com.arjental.taimukka.presentaion.ui.components.app.*
 import com.arjental.taimukka.presentaion.ui.theme.TaimukkaTheme
@@ -27,7 +26,7 @@ fun PreviewWrap(
             val displayFeatures = calculateDisplayFeatures(activity)
             CompositionLocalProvider(
                 LocalDisplayFeatures provides displayFeatures,
-                LocalComponentType provides contentType,
+                LocalContentType provides contentType,
                 LocalNavigationType provides navigationType,
                 LocalNavigationContentPosition provides navigationContentPosition
             ) {

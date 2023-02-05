@@ -14,9 +14,14 @@ class EmptyScreen : Screen {
 
     @Composable
     override fun Content() {
-        Box(modifier = Modifier.background(color = MaterialTheme.colorScheme.error).fillMaxSize()) {
-            Text(textAlign = TextAlign.Center, text = "screen is empty")
-        }
+        EmptyScreenContent()
     }
 
+}
+
+@Composable
+fun EmptyScreenContent() {
+    Box(modifier = Modifier.background(color = MaterialTheme.colorScheme.error).fillMaxSize()) {
+        Text(textAlign = TextAlign.Center, text = "screen is empty")
+    }
 }

@@ -3,7 +3,9 @@ package com.arjental.taimukka.presentaion.ui.screens.tabs.settings
 import androidx.annotation.StringRes
 import com.arjental.taimukka.R
 import com.arjental.taimukka.presentaion.ui.components.uiutils.DividedScreens
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LoadingScreens
 import com.arjental.taimukka.presentaion.ui.components.uiutils.ScreenPart
+import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.screen_parts.AuthorizationPart
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.Transient
@@ -14,51 +16,68 @@ import kotlinx.serialization.Transient
  */
 @kotlinx.serialization.Serializable
 class SettingsState(
-    @StringRes @Transient val title: Int = R.string.settings_title,
-    override val left: ImmutableList<ScreenPart> = persistentListOf(),
-    override val right: ImmutableList<ScreenPart> = persistentListOf(),
+    override val left: ImmutableList<ScreenPart> = persistentListOf(
+        com.arjental.taimukka.presentaion.ui.screens.tabs.settings.screen_parts.SettingsList(),
+    ),
+    override val right: ImmutableList<ScreenPart> = persistentListOf(
+        AuthorizationPart()
+    ),
     override val full: ImmutableList<ScreenPart> = persistentListOf(),
 ) : DividedScreens
 
-
-//listOf<SettingsScreen>(
-//        SettingsList(
-//            list = persistentListOf(
-//                SettingsListElement(
-//                    type = SettingsType.AUTH,
-//                    title = R.string.settings_signin_signup,
-//                ),
-//                SettingsListElement(
-//                    type = SettingsType.THEME,
-//                    title = R.string.settings_signin_signup,
-//                    subtitle = R.string.settings_theme_dark_light,
-//                    switch = true,
-//                    switchState = true
-//                ),
-//                SettingsListElement(
-//                    type = SettingsType.NOTIFICATIONS,
-//                    title = R.string.settings_notifications,
-//                    qualityCount = "32",
-//                ),
-//                SettingsListElement(
-//                    type = SettingsType.SUBSCRIPTION,
-//                    title = R.string.settings_subscription,
-//                ),
-//                SettingsListElement(
-//                    type = SettingsType.PRIVACY_POLICY,
-//                    title = R.string.settings_privacy,
-//                ),
-//            )
-//        )
-//    ).toImmutableList(),
 
 /**
  * List of settings in a left part of screen. Element can be selected.
  */
 
-data class SettingsList(
-    val list: ImmutableList<SettingsListElement>
-) : SettingsScreen
+@kotlinx.serialization.Serializable
+data class SettingsListElements(
+    @StringRes @Transient val title: Int = R.string.settings_title,
+    val list: ImmutableList<SettingsListElement> = persistentListOf()
+) : LoadingScreens(), java.io.Serializable
+
+suspend fun SettingsListElements.createList(
+    useDefaultThemeSwitchState: Boolean,
+    forceDarkModeSwitchState: Boolean,
+    forceDarkModeSwitchEnabled: Boolean
+): SettingsListElements {
+    return this.copy(
+        list = persistentListOf(
+            SettingsListElement(
+                type = SettingsType.AUTH,
+                title = R.string.settings_signin_signup,
+            ),
+            SettingsListElement(
+                type = SettingsType.THEME_DEFAULT,
+                title = R.string.settings_theme_system,
+                subtitle = R.string.settings_theme_system_disc,
+                switch = true,
+                switchState = useDefaultThemeSwitchState
+            ),
+            SettingsListElement(
+                type = SettingsType.THEME,
+                title = R.string.settings_theme,
+                subtitle = R.string.settings_theme_desc,
+                switch = true,
+                switchEnabled = forceDarkModeSwitchEnabled,
+                switchState = forceDarkModeSwitchState,
+            ),
+            SettingsListElement(
+                type = SettingsType.NOTIFICATIONS,
+                title = R.string.settings_notifications,
+                qualityCount = "32",
+            ),
+            SettingsListElement(
+                type = SettingsType.SUBSCRIPTION,
+                title = R.string.settings_subscription,
+            ),
+            SettingsListElement(
+                type = SettingsType.PRIVACY_POLICY,
+                title = R.string.settings_privacy,
+            ),
+        )
+    )
+}
 
 /**
  * Element of list of settings
@@ -72,6 +91,7 @@ data class SettingsListElement(
     val qualityCount: String? = null,
     val switch: Boolean = false,
     val switchState: Boolean = false,
+    val switchEnabled: Boolean = true,
     val disableFollow: Boolean = false
 ) : java.io.Serializable
 
@@ -81,6 +101,6 @@ data class SettingsListElement(
 
 @kotlinx.serialization.Serializable
 enum class SettingsType : java.io.Serializable {
-    AUTH, THEME, NOTIFICATIONS, SUBSCRIPTION, PRIVACY_POLICY
+    AUTH, THEME_DEFAULT, THEME, NOTIFICATIONS, SUBSCRIPTION, PRIVACY_POLICY
 }
 

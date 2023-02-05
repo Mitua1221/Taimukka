@@ -23,10 +23,12 @@
 
     <string name="settings_title">Settings</string>
     <string name="settings_signin_signup">Sign in/Sign up</string>
+    <string name="settings_theme_system">Use system theme</string>
+    <string name="settings_theme_system_disc">Uses Android theme by default</string>
     <string name="settings_theme">Theme</string>
-    <string name="settings_theme_dark_light">Dark/Light</string>
+    <string name="settings_theme_desc">Dark/Light</string>
     <string name="settings_notifications">Notifications</string>
-    <string name="settings_subscription">Notifications</string>
+    <string name="settings_subscription">Subscription</string>
     <string name="settings_privacy">Privacy policy</string>
 
 

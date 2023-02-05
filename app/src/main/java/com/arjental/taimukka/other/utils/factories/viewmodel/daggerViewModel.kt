@@ -8,10 +8,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+//https://medium.com/@mikhail_zhalskiy/injecting-savedstatehandle-into-viewmodel-using-dagger-2-and-jetpack-compose-30b34df9ffd1
 @Composable
 inline fun <reified VM : ViewModel> daggerViewModel(): VM {
     val factory = getViewModelFactory()
-    return viewModel {
+    return viewModel{
         //val savedStateHandle = createSavedStateHandle()
         factory.create(VM::class.java)
     }

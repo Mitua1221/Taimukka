@@ -1,7 +1,10 @@
 package com.arjental.taimukka.presentaion.ui.components.app
 
 import android.graphics.Rect
+import androidx.compose.runtime.Composable
 import androidx.window.layout.FoldingFeature
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalContentType
+import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationType
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -38,6 +41,15 @@ enum class NavigationType {
     BOTTOM_NAVIGATION, NAVIGATION_RAIL, PERMANENT_NAVIGATION_DRAWER
 }
 
+@Composable
+fun isBottomNav(): Boolean = LocalNavigationType.current == NavigationType.BOTTOM_NAVIGATION
+
+@Composable
+fun isRailNav(): Boolean = LocalNavigationType.current == NavigationType.NAVIGATION_RAIL
+
+@Composable
+fun isDrawerNav(): Boolean = LocalNavigationType.current == NavigationType.PERMANENT_NAVIGATION_DRAWER
+
 /**
  * Different position of navigation content inside Navigation Rail, Navigation Drawer depending on device size and state.
  */
@@ -50,4 +62,12 @@ enum class NavigationContentPosition {
  */
 enum class ContentType {
     SINGLE_PANE, DUAL_PANE
+}
+
+@Composable
+fun isSingle(): Boolean = !isDual()
+
+@Composable
+fun isDual(): Boolean {
+    return LocalContentType.current == ContentType.DUAL_PANE
 }

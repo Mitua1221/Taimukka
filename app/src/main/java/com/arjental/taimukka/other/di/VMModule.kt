@@ -5,6 +5,7 @@ import com.arjental.taimukka.other.utils.factories.viewmodel.ViewModelKey
 import com.arjental.taimukka.presentaion.ui.screens.splash.SplashVM
 import com.arjental.taimukka.presentaion.ui.screens.tabs.app_list.AppListVM
 import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.SettingsVM
+import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.screen_parts.AuthorizationVM
 import com.arjental.taimukka.presentaion.ui.screens.tabs.stats.StatsVM
 import dagger.Binds
 import dagger.Module
@@ -34,6 +35,12 @@ interface VMModule {
     @IntoMap
     @ViewModelKey(SettingsVM::class)
     fun settingsVM(viewModel: SettingsVM): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(AuthorizationVM::class)
+    fun authorizationVM(viewModel: AuthorizationVM): ViewModel
+
 
 
 }

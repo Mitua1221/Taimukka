@@ -20,7 +20,7 @@ class SettingsState(
         com.arjental.taimukka.presentaion.ui.screens.tabs.settings.screen_parts.SettingsList(),
     ),
     override val right: ImmutableList<ScreenPart> = persistentListOf(
-        AuthorizationPart()
+        /*AuthorizationPart()*/
     ),
     override val full: ImmutableList<ScreenPart> = persistentListOf(),
 ) : DividedScreens

@@ -11,5 +11,5 @@ val navigationTabs = listOf(
     StatsTab(),
     AppListTab(),
     ControlTab(),
-    SettingsTab(),
+    startTab,
 )

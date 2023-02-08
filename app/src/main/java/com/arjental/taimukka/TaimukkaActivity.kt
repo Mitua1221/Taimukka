@@ -19,7 +19,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import com.arjental.taimukka.other.utils.components.activity.TaimukkaDaggerActivity
-import com.arjental.taimukka.other.utils.factories.viewmodel.Inject
+import com.arjental.taimukka.other.utils.factories.viewmodel.SetViewModelFactory
 import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaApplication
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalDispatchers
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalTActivity
@@ -62,7 +62,7 @@ class TaimukkaActivity : TaimukkaDaggerActivity() {
                 ) {
                     val windowSize = calculateWindowSizeClass(this)
                     val displayFeatures = calculateDisplayFeatures(this)
-                    Inject(viewModelFactory) {
+                    SetViewModelFactory(viewModelFactory) {
                         TaimukkaApplication(
                             windowSize = windowSize,
                             displayFeatures = displayFeatures,

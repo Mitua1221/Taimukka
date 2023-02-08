@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.CurrentScreen
+import cafe.adriel.voyager.navigator.Navigator
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
 import com.arjental.taimukka.presentaion.ui.components.uiutils.ScreenPart
 import com.arjental.taimukka.presentaion.ui.images.TIcons
@@ -21,13 +23,12 @@ import com.arjental.taimukka.presentaion.ui.images.ticons.Follow
 import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.SettingsType
 import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.SettingsVM
 
-class SettingsList : ScreenPart {
+class SettingsList : ScreenPart() {
+
+    override val implementParentLifecycle: Boolean = true
 
     @Composable
-    override fun Content() {
-        SettingsListContent()
-    }
-
+    override fun TContent() = SettingsListContent()
 
 }
 
@@ -126,6 +127,13 @@ fun SettingsListContent() {
                     )
                 }
             }
+        }
+
+        item {
+            Navigator(screen = AuthorizationPart()) {
+                CurrentScreen()
+            }
+
         }
 
     }

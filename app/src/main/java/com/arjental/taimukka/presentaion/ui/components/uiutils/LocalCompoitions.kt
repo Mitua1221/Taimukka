@@ -1,9 +1,9 @@
 package com.arjental.taimukka.presentaion.ui.components.uiutils
 
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.window.layout.DisplayFeature
 import com.arjental.taimukka.TaimukkaActivity
-import com.arjental.taimukka.other.utils.components.activity.TaimukkaDaggerActivity
 import com.arjental.taimukka.other.utils.dispatchers.TDispatcher
 import com.arjental.taimukka.presentaion.ui.components.app.ContentType
 import com.arjental.taimukka.presentaion.ui.components.app.NavigationContentPosition
@@ -13,24 +13,28 @@ private fun noLocalProvidedFor(name: String): Nothing {
     error("CompositionLocal $name not present")
 }
 
-val LocalDisplayFeatures = staticCompositionLocalOf<List<DisplayFeature>> {
+val LocalDisplayFeatures = compositionLocalOf<List<DisplayFeature>> {
     noLocalProvidedFor("LocalDisplayFeatures")
 }
 
-val LocalComponentType = staticCompositionLocalOf<ContentType> {
+val LocalContentType = compositionLocalOf<ContentType> {
     noLocalProvidedFor("LocalComponentType")
 }
 
-val LocalNavigationType = staticCompositionLocalOf<NavigationType> {
+val LocalNavigationType = compositionLocalOf<NavigationType> {
     noLocalProvidedFor("LocalNavigationType")
 }
 
-val LocalNavigationContentPosition = staticCompositionLocalOf<NavigationContentPosition> {
+val LocalNavigationContentPosition = compositionLocalOf<NavigationContentPosition> {
     noLocalProvidedFor("LocalNavigationContentPosition")
 }
 
 val LocalTActivity = staticCompositionLocalOf<TaimukkaActivity> {
     noLocalProvidedFor("TaimukkaActivity")
+}
+
+val LocalTScreen = compositionLocalOf<TScreen?> {
+    null
 }
 
 val LocalDispatchers = staticCompositionLocalOf<TDispatcher> {

@@ -3,6 +3,7 @@ package com.arjental.taimukka
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -10,14 +11,16 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import com.arjental.taimukka.data.settings.ColorScheme
 import com.arjental.taimukka.other.utils.components.activity.TaimukkaDaggerActivity
-import com.arjental.taimukka.other.utils.factories.viewmodel.Inject
+import com.arjental.taimukka.other.utils.factories.viewmodel.SetViewModelFactory
 import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaApplication
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalDispatchers
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalTActivity
@@ -48,10 +51,19 @@ class TaimukkaActivity : TaimukkaDaggerActivity() {
                 LocalTActivity provides this,
                 LocalDispatchers provides dispatchers.get()
             ) {
-                TaimukkaTheme {
+
+                val themeState = splashValidateViewModel.colorsScheme().collectAsState()
+
+                TaimukkaTheme(
+                    darkTheme = when (themeState.value) {
+                        ColorScheme.SYS -> isSystemInDarkTheme()
+                        ColorScheme.NIGHT -> true
+                        ColorScheme.DAY -> false
+                    }
+                ) {
                     val windowSize = calculateWindowSizeClass(this)
                     val displayFeatures = calculateDisplayFeatures(this)
-                    Inject(viewModelFactory) {
+                    SetViewModelFactory(viewModelFactory) {
                         TaimukkaApplication(
                             windowSize = windowSize,
                             displayFeatures = displayFeatures,

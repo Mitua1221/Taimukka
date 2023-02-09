@@ -9,11 +9,11 @@ import androidx.compose.ui.res.stringResource
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import com.arjental.taimukka.R
+import com.arjental.taimukka.presentaion.ui.components.uiutils.TTab
 import com.arjental.taimukka.presentaion.ui.images.TIcons
 import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Control
-import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Stats
 
-class ControlTab() : Tab {
+class ControlTab() : TTab() {
 
     override val options: TabOptions
         @Composable
@@ -31,7 +31,7 @@ class ControlTab() : Tab {
         }
 
     @Composable
-    override fun Content() {
+    override fun TContent() {
     }
 
 

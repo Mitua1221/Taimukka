@@ -31,7 +31,7 @@ fun NavigationRail(
         modifier = Modifier
             .fillMaxHeight()
             .width(95.dp),
-        containerColor = MaterialTheme.colorScheme.inverseOnSurface
+        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxHeight(),

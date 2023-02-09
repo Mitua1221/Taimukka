@@ -93,6 +93,7 @@ dependencies {
     implementation "cafe.adriel.voyager:voyager-tab-navigator:1.0.0-rc03"
     implementation "cafe.adriel.voyager:voyager-transitions:1.0.0-rc03"
     implementation "cafe.adriel.voyager:voyager-androidx:1.0.0-rc03"
+    implementation "cafe.adriel.voyager:voyager-hilt:1.0.0-rc03"
 
     //Coroutines
 
@@ -125,6 +126,8 @@ dependencies {
     //Splash
     implementation "androidx.core:core-splashscreen:1.0.0"
 
+    //Immutable collections
+    implementation "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5"
 
 }
 

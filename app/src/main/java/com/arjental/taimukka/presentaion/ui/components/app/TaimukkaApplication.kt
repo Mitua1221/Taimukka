@@ -11,18 +11,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.window.layout.DisplayFeature
 import androidx.window.layout.FoldingFeature
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.CurrentTab
-import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
+import com.arjental.taimukka.other.utils.factories.viewmodel.daggerActivityViewModel
 import com.arjental.taimukka.presentaion.ui.components.uiutils.*
 import com.arjental.taimukka.presentaion.ui.screens.empty.EmptyScreen
 import com.arjental.taimukka.presentaion.ui.screens.onboarding.OnBoardingScreen
 import com.arjental.taimukka.presentaion.ui.screens.splash.SplashState
 import com.arjental.taimukka.presentaion.ui.screens.splash.SplashVM
 import com.arjental.taimukka.presentaion.ui.screens.tabs.TabsRootScreen
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,7 +101,7 @@ fun TaimukkaApplication(
 
     CompositionLocalProvider(
         LocalDisplayFeatures provides displayFeatures,
-        LocalComponentType provides contentType,
+        LocalContentType provides contentType,
         LocalNavigationType provides navigationType,
         LocalNavigationContentPosition provides navigationContentPosition
     ) {
@@ -114,7 +114,7 @@ fun TaimukkaApplication(
 @Composable
 private fun NavigationWrapper() {
 
-    val splashVM = daggerViewModel<SplashVM>()
+    val splashVM = daggerActivityViewModel<SplashVM>()
 
     Navigator(screen = EmptyScreen()) { navigator ->
 
@@ -125,9 +125,11 @@ private fun NavigationWrapper() {
             is SplashState.State -> {
                 when {
                     splashViewModelState.showOnBoarding -> {
-                        navigator.replaceAll(OnBoardingScreen(
-                            onBoardingList = splashViewModelState.onBoardingScreens
-                        ))
+                        navigator.replaceAll(
+                            OnBoardingScreen(
+                                onBoardingList = splashViewModelState.onBoardingScreens
+                            )
+                        )
                     }
                     else -> {
                         navigator.replaceAll(TabsRootScreen())
@@ -182,7 +184,12 @@ fun AppContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(
+                    if (isSingle())
+                        MaterialTheme.colorScheme.background
+                    else
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+                )
         ) {
             CurrentTab()
         }

@@ -14,14 +14,13 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Taimukka"
+        android:theme="@style/Theme.Taimukka.Splash"
         tools:targetApi="33"
         android:name=".App">
         <activity
             android:name=".TaimukkaActivity"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.Taimukka">
+            android:theme="@style/Theme.Taimukka.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -32,6 +31,12 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+
+        <service
+            android:name=".other.platform.PermissionsCheckerService"
+            android:enabled="true"
+            android:exported="false"/>
+
     </application>
 
 </manifest>

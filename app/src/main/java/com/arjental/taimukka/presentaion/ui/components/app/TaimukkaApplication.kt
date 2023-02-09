@@ -9,19 +9,20 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.window.layout.DisplayFeature
 import androidx.window.layout.FoldingFeature
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.CurrentTab
-import cafe.adriel.voyager.navigator.tab.TabNavigator
-import com.arjental.taimukka.presentaion.ui.components.navigations.BottomNavigationBar
-import com.arjental.taimukka.presentaion.ui.components.navigations.startTab
-import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalComponentType
-import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalDisplayFeatures
-import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationContentPosition
-import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalNavigationType
-import kotlinx.coroutines.launch
+import com.arjental.taimukka.other.utils.factories.viewmodel.daggerActivityViewModel
+import com.arjental.taimukka.presentaion.ui.components.uiutils.*
+import com.arjental.taimukka.presentaion.ui.screens.empty.EmptyScreen
+import com.arjental.taimukka.presentaion.ui.screens.onboarding.OnBoardingScreen
+import com.arjental.taimukka.presentaion.ui.screens.splash.SplashState
+import com.arjental.taimukka.presentaion.ui.screens.splash.SplashVM
+import com.arjental.taimukka.presentaion.ui.screens.tabs.TabsRootScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +101,7 @@ fun TaimukkaApplication(
 
     CompositionLocalProvider(
         LocalDisplayFeatures provides displayFeatures,
-        LocalComponentType provides contentType,
+        LocalContentType provides contentType,
         LocalNavigationType provides navigationType,
         LocalNavigationContentPosition provides navigationContentPosition
     ) {
@@ -109,33 +110,36 @@ fun TaimukkaApplication(
 
 }
 
-data class Movie(val title: String, val year: Int)
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NavigationWrapper() {
 
-    TabNavigator(startTab) {
-        when (LocalNavigationType.current) {
-            NavigationType.BOTTOM_NAVIGATION -> {
-                BottomNavigationBar()
-            }
-            NavigationType.NAVIGATION_RAIL -> {
-                ModalNavigationRailDrawer()
-            }
-            NavigationType.PERMANENT_NAVIGATION_DRAWER -> {
-                PermanentNavigationDrawer(drawerContent = {
-                    PermanentNavigationDrawerContent(
-                        selectedDestination = "selectedDestination",
-                        navigationContentPosition = LocalNavigationContentPosition.current,
-                    )
-                }) {
-                    AppContent()
-                }
+    val splashVM = daggerActivityViewModel<SplashVM>()
 
+    Navigator(screen = EmptyScreen()) { navigator ->
+
+        val splashViewModelState = splashVM.collectState().collectAsState().value
+
+        when (splashViewModelState) {
+            is SplashState.Loading -> Unit
+            is SplashState.State -> {
+                when {
+                    splashViewModelState.showOnBoarding -> {
+                        navigator.replaceAll(
+                            OnBoardingScreen(
+                                onBoardingList = splashViewModelState.onBoardingScreens
+                            )
+                        )
+                    }
+                    else -> {
+                        navigator.replaceAll(TabsRootScreen())
+                    }
+                }
             }
         }
+
+        navigator.lastItem.Content()
+
     }
 
 }
@@ -143,47 +147,49 @@ private fun NavigationWrapper() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModalNavigationRailDrawer() {
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-
-    ModalNavigationDrawer(
-        drawerContent = {
-            ModalNavigationDrawerContent(
-                selectedDestination = "selectedDestination",
-                navigationContentPosition = LocalNavigationContentPosition.current,
-                onDrawerClicked = {
-                    scope.launch {
-                        drawerState.close()
-                    }
-                }
-            )
-        },
-        drawerState = drawerState
-    ) {
-        AppContent {
-            scope.launch {
-                drawerState.open()
-            }
-        }
-    }
+//    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+//    val scope = rememberTCoroutineScope()
+//
+//    ModalNavigationDrawer(
+//        drawerContent = {
+//            ModalNavigationDrawerContent(
+//                selectedDestination = "selectedDestination",
+//                navigationContentPosition = LocalNavigationContentPosition.current,
+//                onDrawerClicked = {
+//                    scope.launch {
+//                        drawerState.close()
+//                    }
+//                }
+//            )
+//        },
+//        drawerState = drawerState
+//    ) {
+//        AppContent {
+//            scope.launch {
+//                drawerState.open()
+//            }
+//        }
+//    }
 
 }
 
 @Composable
 fun AppContent(
     modifier: Modifier = Modifier,
-    onDrawerClicked: () -> Unit = {}
 ) {
     Row(modifier = modifier.fillMaxSize()) {
-        AnimatedVisibility(visible = LocalNavigationType.current == NavigationType.NAVIGATION_RAIL) {
-            NavigationRail(
-                onDrawerClicked = onDrawerClicked,
-            )
+        AnimatedVisibility(visible = LocalNavigationType.current == NavigationType.NAVIGATION_RAIL || LocalNavigationType.current == NavigationType.PERMANENT_NAVIGATION_DRAWER) {
+            NavigationRail()
         }
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(
+                    if (isSingle())
+                        MaterialTheme.colorScheme.background
+                    else
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+                )
         ) {
             CurrentTab()
         }

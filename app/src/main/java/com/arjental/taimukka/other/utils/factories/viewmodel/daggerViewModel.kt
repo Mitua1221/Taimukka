@@ -1,11 +1,8 @@
 package com.arjental.taimukka.other.utils.factories.viewmodel
 
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.androidx.AndroidScreenLifecycleOwner
 import cafe.adriel.voyager.core.lifecycle.ScreenLifecycleProvider
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalTActivity
@@ -21,16 +18,35 @@ import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalTScreen
 //    }
 //}
 
+enum class VMOwner {
+    ACTIVITY,
+    CURRENT_COMPOSABLE
+}
+
+@Composable
+public inline fun <reified VM : ViewModel> daggerActivityViewModel(
+    factory: ViewModelProvider.Factory = getViewModelFactory(),
+) = daggerViewModel<VM>(
+    owner = VMOwner.ACTIVITY,
+    factory = getViewModelFactory(),
+)
+
 @Composable
 public inline fun <reified VM : ViewModel> daggerViewModel(
-    factory: ViewModelProvider.Factory = getViewModelFactory()
+    owner: VMOwner = VMOwner.CURRENT_COMPOSABLE,
+    factory: ViewModelProvider.Factory = getViewModelFactory(),
 ): VM {
     val context = LocalTActivity.current
     val screen = LocalTScreen.current
     return remember(key1 = VM::class) {
-        val lifecycleOwner = (screen as? ScreenLifecycleProvider)
-            ?.getLifecycleOwner() as? AndroidScreenLifecycleOwner
-            ?: context
+        val lifecycleOwner =
+            if (owner == VMOwner.ACTIVITY) {
+                context
+            } else {
+                (screen as? ScreenLifecycleProvider)
+                    ?.getLifecycleOwner() as? AndroidScreenLifecycleOwner
+                    ?: throw IllegalStateException("composable scope viewmodel requested not from composable screen")
+            }
 //        val factory = VoyagerHiltViewModelFactories.getVoyagerFactory(
 //            activity = context,
 //            owner = lifecycleOwner,
@@ -47,7 +63,7 @@ public inline fun <reified VM : ViewModel> daggerViewModel(
 
 @Composable
 @PublishedApi
-internal fun getViewModelFactory(): ViewModelProvider.Factory  {
+internal fun getViewModelFactory(): ViewModelProvider.Factory {
     return checkNotNull(LocalViewModelFactory.current) {
         "No ViewModelFactory was provided via LocalViewModelFactory"
     }

@@ -1,5 +1,7 @@
 package com.arjental.taimukka.presentaion.ui.screens.tabs.settings.screen_parts
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,16 +14,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.navigator.CurrentScreen
-import cafe.adriel.voyager.navigator.Navigator
+import androidx.core.content.ContextCompat.startActivity
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
 import com.arjental.taimukka.presentaion.ui.components.uiutils.ScreenPart
 import com.arjental.taimukka.presentaion.ui.images.TIcons
 import com.arjental.taimukka.presentaion.ui.images.ticons.Follow
 import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.SettingsType
 import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.SettingsVM
+
 
 class SettingsList : ScreenPart() {
 
@@ -62,6 +67,7 @@ fun SettingsListContent() {
             item(
                 key = screen.type.name
             ) {
+                val context = LocalContext.current
                 Box(
                     Modifier
                         .padding(horizontal = 16.dp)
@@ -69,7 +75,17 @@ fun SettingsListContent() {
                             when (screen.type) {
                                 SettingsType.THEME -> Modifier
                                 else -> Modifier.clickable {
-                                    settingsVM.clickOnSettingsItem(screen.type)
+                                    when {
+                                        !screen.clickableUrl.isNullOrEmpty() -> {
+                                            context.startActivity(
+                                                Intent(
+                                                    Intent.ACTION_VIEW,
+                                                    Uri.parse(screen.clickableUrl)
+                                                )
+                                            )
+                                        }
+                                        else -> settingsVM.clickOnSettingsItem(screen.type)
+                                    }
                                 }
                             }
                         )
@@ -107,12 +123,14 @@ fun SettingsListContent() {
                             enabled = screen.switchEnabled,
                             onCheckedChange = {
                                 settingsVM.onSwitchChanged(type = screen.type, state = it)
-                        })
+                            })
                     } else {
+                        val icon = rememberVectorPainter(TIcons.Follow)
                         Image(
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
-                                .padding(end = 8.dp), imageVector = TIcons.Follow, contentDescription = TIcons.Follow.name
+                                .padding(end = 8.dp), painter = icon, contentDescription = TIcons.Follow.name,
+                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSurface)
                         )
                     }
 
@@ -129,12 +147,6 @@ fun SettingsListContent() {
             }
         }
 
-        item {
-            Navigator(screen = AuthorizationPart()) {
-                CurrentScreen()
-            }
-
-        }
 
     }
 }

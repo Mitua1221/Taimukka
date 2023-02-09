@@ -5,7 +5,6 @@ import com.arjental.taimukka.R
 import com.arjental.taimukka.presentaion.ui.components.uiutils.DividedScreens
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LoadingScreens
 import com.arjental.taimukka.presentaion.ui.components.uiutils.ScreenPart
-import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.screen_parts.AuthorizationPart
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.Transient
@@ -43,10 +42,10 @@ suspend fun SettingsListElements.createList(
 ): SettingsListElements {
     return this.copy(
         list = persistentListOf(
-            SettingsListElement(
-                type = SettingsType.AUTH,
-                title = R.string.settings_signin_signup,
-            ),
+//            SettingsListElement(
+//                type = SettingsType.AUTH,
+//                title = R.string.settings_signin_signup,
+//            ),
             SettingsListElement(
                 type = SettingsType.THEME_DEFAULT,
                 title = R.string.settings_theme_system,
@@ -62,18 +61,24 @@ suspend fun SettingsListElements.createList(
                 switchEnabled = forceDarkModeSwitchEnabled,
                 switchState = forceDarkModeSwitchState,
             ),
-            SettingsListElement(
-                type = SettingsType.NOTIFICATIONS,
-                title = R.string.settings_notifications,
-                qualityCount = "32",
-            ),
-            SettingsListElement(
-                type = SettingsType.SUBSCRIPTION,
-                title = R.string.settings_subscription,
-            ),
+//            SettingsListElement(
+//                type = SettingsType.NOTIFICATIONS,
+//                title = R.string.settings_notifications,
+//                qualityCount = "32",
+//            ),
+//            SettingsListElement(
+//                type = SettingsType.SUBSCRIPTION,
+//                title = R.string.settings_subscription,
+//            ),
             SettingsListElement(
                 type = SettingsType.PRIVACY_POLICY,
                 title = R.string.settings_privacy,
+                clickableUrl = "https://docs.google.com/document/d/1dmAlUq32azwQIq4njezUcpcXVJqj3exKUjIrdq25Qrk/edit?usp=sharing"
+            ),
+            SettingsListElement(
+                type = SettingsType.TERMS_OF_USE,
+                title = R.string.settings_terms_conditions,
+                clickableUrl = "https://docs.google.com/document/d/1ELO2X8aVVl7Kr-WnHeqVoKL1wFm24xrBPR2LLKlQDBs/edit?usp=sharing"
             ),
         )
     )
@@ -92,7 +97,8 @@ data class SettingsListElement(
     val switch: Boolean = false,
     val switchState: Boolean = false,
     val switchEnabled: Boolean = true,
-    val disableFollow: Boolean = false
+    val disableFollow: Boolean = false,
+    val clickableUrl: String? = null
 ) : java.io.Serializable
 
 /**
@@ -101,6 +107,6 @@ data class SettingsListElement(
 
 @kotlinx.serialization.Serializable
 enum class SettingsType : java.io.Serializable {
-    AUTH, THEME_DEFAULT, THEME, NOTIFICATIONS, SUBSCRIPTION, PRIVACY_POLICY
+    AUTH, THEME_DEFAULT, THEME, NOTIFICATIONS, SUBSCRIPTION, PRIVACY_POLICY, TERMS_OF_USE
 }
 

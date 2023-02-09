@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import com.arjental.taimukka.data.settings.ColorScheme
 import com.arjental.taimukka.other.utils.components.activity.TaimukkaDaggerActivity
 import com.arjental.taimukka.other.utils.factories.viewmodel.SetViewModelFactory
 import com.arjental.taimukka.presentaion.ui.components.app.TaimukkaApplication
@@ -54,10 +55,10 @@ class TaimukkaActivity : TaimukkaDaggerActivity() {
                 val themeState = splashValidateViewModel.colorsScheme().collectAsState()
 
                 TaimukkaTheme(
-                    darkTheme = if (themeState.value.isSystemThemeUsed) {
-                        isSystemInDarkTheme()
-                    } else {
-                        themeState.value.isDarkThemeEnabled
+                    darkTheme = when (themeState.value) {
+                        ColorScheme.SYS -> isSystemInDarkTheme()
+                        ColorScheme.NIGHT -> true
+                        ColorScheme.DAY -> false
                     }
                 ) {
                     val windowSize = calculateWindowSizeClass(this)

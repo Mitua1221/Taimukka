@@ -26,10 +26,11 @@ fun BottomNavigationBar() {
                     }
                 },
                 bottomBar = {
+
                     NavigationBar(
                         containerColor = MaterialTheme.colorScheme.surface,
                         contentColor = MaterialTheme.colorScheme.secondaryContainer,
-                        tonalElevation = 2.dp
+                        tonalElevation = 3.dp,
                     ) {
                         navigationTabs.forEach {
                             TabNavigationItem(it)

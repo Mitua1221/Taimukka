@@ -16,7 +16,7 @@ import androidx.window.layout.DisplayFeature
 import androidx.window.layout.FoldingFeature
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.CurrentTab
-import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
+import com.arjental.taimukka.other.utils.factories.viewmodel.daggerActivityViewModel
 import com.arjental.taimukka.presentaion.ui.components.uiutils.*
 import com.arjental.taimukka.presentaion.ui.screens.empty.EmptyScreen
 import com.arjental.taimukka.presentaion.ui.screens.onboarding.OnBoardingScreen
@@ -114,7 +114,7 @@ fun TaimukkaApplication(
 @Composable
 private fun NavigationWrapper() {
 
-    val splashVM = daggerViewModel<SplashVM>()
+    val splashVM = daggerActivityViewModel<SplashVM>()
 
     Navigator(screen = EmptyScreen()) { navigator ->
 

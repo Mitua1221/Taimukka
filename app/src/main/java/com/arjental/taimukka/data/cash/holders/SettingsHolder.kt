@@ -1,7 +1,11 @@
 package com.arjental.taimukka.data.cash.holders
 
 import com.arjental.taimukka.data.cash.Database
+import com.arjental.taimukka.data.settings.ColorScheme
 import com.arjental.taimukka.entities.data.cash.AppSettings
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 interface SettingsHolder {
@@ -9,6 +13,7 @@ interface SettingsHolder {
     suspend fun setUseSystemTheme(useSystem: Boolean)
     suspend fun isDarkThemeEnabled(): Boolean
     suspend fun setDarkTheme(enabled: Boolean)
+    fun getColorScheme(): Flow<ColorScheme>
 }
 
 class SettingsHolderImpl @Inject constructor(
@@ -41,6 +46,19 @@ class SettingsHolderImpl @Inject constructor(
     override suspend fun setDarkTheme(enabled: Boolean) {
         settings.setSettingsItem(wrap(k = USE_DARK_THEME, v = ki(enabled)))
     }
+
+    override fun getColorScheme(): Flow<ColorScheme> =
+        settings.getSettingsItemFlow(settingKey = USE_SYSTEM_THEME).map { it?.settingsValue?.equals(TRUE) ?: true }.combine(
+            settings.getSettingsItemFlow(settingKey = USE_DARK_THEME).map { it?.settingsValue?.equals(TRUE) ?: false }
+        ) { systhemTheme, useDarkMode ->
+            when {
+                systhemTheme -> ColorScheme.SYS
+                useDarkMode -> ColorScheme.NIGHT
+                else -> ColorScheme.DAY
+            }
+
+        }
+
 
 }
 

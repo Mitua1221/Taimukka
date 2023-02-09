@@ -12,7 +12,6 @@ import com.arjental.taimukka.R
 import com.arjental.taimukka.presentaion.ui.components.uiutils.TTab
 import com.arjental.taimukka.presentaion.ui.images.TIcons
 import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Control
-import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Stats
 
 class ControlTab() : TTab() {
 

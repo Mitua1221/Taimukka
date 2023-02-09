@@ -23,7 +23,6 @@ class SettingsVM @Inject constructor(
         launch {
             val isDarkThemeEnabled = async { settingsUC.isDarkThemeEnabled() }
             val isSystemThemeUsed = async { settingsUC.isSystemThemeUsed() }
-            delay(3000)
             update {
                 it.createList(
                     useDefaultThemeSwitchState = isSystemThemeUsed.await(),
@@ -31,18 +30,7 @@ class SettingsVM @Inject constructor(
                     forceDarkModeSwitchEnabled = !isSystemThemeUsed.await()
                 )
             }
-
         }
-    }
-
-    init {
-        println("SettingsVMSettingsVM init")
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        println("SettingsVMSettingsVM cleared")
-
     }
 
     fun settingsListState() = _settingsListState.asStateFlow()
@@ -82,9 +70,6 @@ class SettingsVM @Inject constructor(
                             }
                         }
                     }
-
-
-
                 }
                 else -> Unit
             }

@@ -11,8 +11,3 @@ sealed interface SplashState {
     ) : SplashState
 
 }
-
-class ColorScheme(
-    val isSystemThemeUsed: Boolean = true,
-    val isDarkThemeEnabled: Boolean = false,
-)

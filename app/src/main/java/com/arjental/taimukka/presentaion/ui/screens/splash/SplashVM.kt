@@ -1,5 +1,6 @@
 package com.arjental.taimukka.presentaion.ui.screens.splash
 
+import com.arjental.taimukka.data.settings.ColorScheme
 import com.arjental.taimukka.domain.uc.CheckPermissionsUC
 import com.arjental.taimukka.domain.uc.FirstLaunchUC
 import com.arjental.taimukka.domain.uc.SettingsUC
@@ -7,13 +8,11 @@ import com.arjental.taimukka.domain.uc.TPermission
 import com.arjental.taimukka.other.utils.components.TViewModel
 import com.arjental.taimukka.other.utils.dispatchers.TDispatcher
 import com.arjental.taimukka.presentaion.ui.screens.onboarding.OnBoardingScreenTypes
-import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.SettingsListElements
-import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.createList
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
@@ -28,7 +27,7 @@ class SplashVM @Inject constructor(
      * Lock to prevent update state before theme/force darkmode woll be loaded
      */
     private val colorsSchemeLoaded = CompletableDeferred<Boolean>()
-    private val _colorsScheme = MutableStateFlow(ColorScheme())
+    private val _colorsScheme = MutableStateFlow(ColorScheme.SYS)
     fun colorsScheme() = _colorsScheme.asStateFlow()
 
     init {
@@ -37,15 +36,10 @@ class SplashVM @Inject constructor(
 
     private fun launch() {
         launch {
-            val isSystemThemeUsed = async { settingsUC.isSystemThemeUsed() }
-            val isDarkThemeEnabled = async { settingsUC.isDarkThemeEnabled() }
-            _colorsScheme.update {
-                ColorScheme(
-                    isSystemThemeUsed = isSystemThemeUsed.await(),
-                    isDarkThemeEnabled = isDarkThemeEnabled.await()
-                )
+            settingsUC.getColorScheme().collectLatest { colorScheme ->
+                _colorsScheme.update { colorScheme }
+                colorsSchemeLoaded.complete(true)
             }
-            colorsSchemeLoaded.complete(true)
         }
         launch {
             val permissionsToRequest = async {

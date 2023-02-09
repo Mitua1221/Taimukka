@@ -1,17 +1,13 @@
 package com.arjental.taimukka.presentaion.ui.screens.tabs.settings.screen_parts
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import com.arjental.taimukka.domain.uc.SettingsUC
 import com.arjental.taimukka.other.utils.components.TViewModel
 import com.arjental.taimukka.other.utils.dispatchers.TDispatcher
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
 import com.arjental.taimukka.presentaion.ui.components.uiutils.ScreenPart
-import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.SettingsEffect
-import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.SettingsState
 import javax.inject.Inject
 
 class AuthorizationPart : ScreenPart() {
@@ -31,9 +27,9 @@ fun AuthorizationContent() {
 
     Column {
         (0..s).forEach {
-           // item {
-                Text(text = it.toString())
-          //  }
+            // item {
+            Text(text = it.toString())
+            //  }
         }
     }
 

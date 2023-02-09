@@ -21,7 +21,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.arjental.taimukka.TaimukkaActivity
 import com.arjental.taimukka.domain.uc.TPermission
-import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
+import com.arjental.taimukka.other.utils.factories.viewmodel.daggerActivityViewModel
 import com.arjental.taimukka.presentaion.ui.components.app.TBoxBackground
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalTActivity
 import com.arjental.taimukka.presentaion.ui.components.uiutils.rememberTCoroutineScope
@@ -131,7 +131,7 @@ private fun ApplicationDescription(
         style = MaterialTheme.typography.bodyMedium,
         letterSpacing = -0.25.sp
     )
-    val splashVM = daggerViewModel<SplashVM>()
+    val splashVM = daggerActivityViewModel<SplashVM>()
     Button(modifier = Modifier.padding(top = 40.dp), onClick = {
         if (last) splashVM.lastPermissionGranted() else onNextClick()
     }) {
@@ -165,7 +165,7 @@ private fun PermissionRequest(
     )
     val activity = LocalTActivity.current
 
-    val splashVM = daggerViewModel<SplashVM>()
+    val splashVM = daggerActivityViewModel<SplashVM>()
     val scope = rememberTCoroutineScope()
 
     var permissionGranted by remember { mutableStateOf(false) }

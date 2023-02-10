@@ -21,6 +21,9 @@
     <!--permissions-->
     <string name="permission_ucm">required to obtain statistics of the applications used. This data will never leave your device.\nYou will be redirected to the device settings to grant permission.</string>
 
+    <string name="applications_title">Applications</string>
+    <string name="applications_application_logo">%1$s logo</string>
+
     <string name="settings_title">Settings</string>
     <string name="settings_signin_signup">Sign in/Sign up</string>
     <string name="settings_theme_system">Use system theme</string>

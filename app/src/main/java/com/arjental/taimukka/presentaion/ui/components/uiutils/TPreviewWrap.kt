@@ -11,7 +11,7 @@ import com.google.accompanist.adaptive.calculateDisplayFeatures
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun PreviewWrap(
+fun TPreviewWrap(
     contentType: ContentType = ContentType.SINGLE_PANE,
     navigationType: NavigationType = NavigationType.BOTTOM_NAVIGATION,
     navigationContentPosition: NavigationContentPosition = NavigationContentPosition.TOP,

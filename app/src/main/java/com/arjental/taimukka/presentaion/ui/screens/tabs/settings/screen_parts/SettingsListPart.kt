@@ -19,8 +19,8 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
+import com.arjental.taimukka.presentaion.ui.components.header.THeader
 import com.arjental.taimukka.presentaion.ui.components.uiutils.ScreenPart
 import com.arjental.taimukka.presentaion.ui.images.TIcons
 import com.arjental.taimukka.presentaion.ui.images.ticons.Follow
@@ -48,19 +48,10 @@ fun SettingsListContent() {
         item(
             key = "settingsTitle"
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .statusBarsPadding()
-                    .padding(top = 24.dp, bottom = 16.dp)
-            ) {
-                Text(
-                    text = stringResource(id = state.value.title),
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
+            THeader(
+                modifier = Modifier.padding(top = 8.dp),
+                title = stringResource(id = state.value.title)
+            )
         }
 
         state.value.list.forEach { screen ->

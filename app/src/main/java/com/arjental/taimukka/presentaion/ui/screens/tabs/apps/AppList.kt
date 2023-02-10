@@ -1,4 +1,4 @@
-package com.arjental.taimukka.presentaion.ui.screens.tabs.settings
+package com.arjental.taimukka.presentaion.ui.screens.tabs.apps
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -7,19 +7,19 @@ import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
 import com.arjental.taimukka.presentaion.ui.components.app.TWrapLines
 import com.arjental.taimukka.presentaion.ui.components.uiutils.TPreviewWrap
 
-@Preview
+@Preview(showBackground = true)
 @Composable
-fun foo() {
+fun DefaultPreview() {
     TPreviewWrap() {
-        Settings()
+        AppListScreen()
     }
 }
 
 @Composable
-fun Settings() {
+fun AppListScreen() {
 
-    val settingsVM = daggerViewModel<SettingsVM>()
-    val state = settingsVM.collectState().collectAsState()
+    val appListVM = daggerViewModel<AppListVM>()
+    val state = appListVM.collectState().collectAsState()
 
     TWrapLines(
         firstColumnScreens = state.value.left,
@@ -27,3 +27,4 @@ fun Settings() {
     )
 
 }
+

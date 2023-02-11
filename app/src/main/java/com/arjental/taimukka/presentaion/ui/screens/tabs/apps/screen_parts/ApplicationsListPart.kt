@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
@@ -86,8 +87,8 @@ fun Foo() {
 fun AppListItem(
     item: AppListItemPres
 ) {
-    val startP = 16.dp
-    val endP = 16.dp
+    val startP = remember { 16.dp }
+    val endP = remember { 16.dp }
     ConstraintLayout(
         modifier = Modifier
             .fillMaxWidth()

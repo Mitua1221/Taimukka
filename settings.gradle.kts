@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "Taimukka"
-include ':app'
+include(":app")

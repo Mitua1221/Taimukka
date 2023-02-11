@@ -16,3 +16,6 @@
 .cxx
 local.properties
 Ivv.txt
+sign-release.jks
+/app/release
+/app/debug

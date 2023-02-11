@@ -1,5 +1,6 @@
 package com.arjental.taimukka.data.stats
 
+import android.annotation.SuppressLint
 import android.app.AppOpsManager
 import android.app.usage.UsageEvents
 import android.content.Context
@@ -11,6 +12,7 @@ import android.os.Build
 import android.os.Process
 import com.arjental.taimukka.entities.data.user_stats.AppInformation
 import com.arjental.taimukka.entities.data.user_stats.LaunchedApp
+import com.arjental.taimukka.other.utils.annotataions.Category
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,12 +23,16 @@ interface UsageStatsManager {
     suspend fun getApplicationsStats(startTimestamp: Long, finishTimestamp: Long): List<LaunchedApp>
 }
 
+//https://medium.com/@quiro91/show-app-usage-with-usagestatsmanager-d47294537dab
+//https://proandroiddev.com/accessing-app-usage-history-in-android-79c3af861ccf
+
 class UsageStatsManagerImpl @Inject constructor(
     private val context: Context
 ) : UsageStatsManager {
 
-    private val packageManager: PackageManager = context.packageManager
+    private val packageManager: PackageManager by lazy { context.packageManager }
 
+    @SuppressLint("WrongConstant")
     override suspend fun getApplicationsStats(startTimestamp: Long, finishTimestamp: Long): List<LaunchedApp> = withContext(Dispatchers.Default) {
         val usageStatsManager = context.getSystemService("usagestats") as android.app.usage.UsageStatsManager
 
@@ -38,18 +44,41 @@ class UsageStatsManagerImpl @Inject constructor(
     }
 
     private suspend fun getInstalledApplications(): Map<String, AppInformation> {
-        val apps: List<ApplicationInfo> = packageManager.getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0))
+        val apps: List<ApplicationInfo> =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+            }
         return apps.map { getAllAppInfo(it.packageName) }.associateBy { it.packageName }
     }
 
     private suspend inline fun getAllAppInfo(packageName: String): AppInformation {
         return try {
-            val info = packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+            val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packageName, 0)
+            }
             val isAppSystem = isApplicationSystem(info)
-            AppInformation(name = packageManager.getApplicationLabel(info.applicationInfo) as String, packageName = packageName, isAppSystem = isAppSystem)
+            val applicationCategory = getApplicationCategory(info)
+            AppInformation(name = packageManager.getApplicationLabel(info.applicationInfo) as String, packageName = packageName, isAppSystem = isAppSystem, appCategory = applicationCategory)
         } catch (e: NameNotFoundException) {
-            AppInformation(packageName = packageName, isAppSystem = true)
+            AppInformation(packageName = packageName, isAppSystem = true, appCategory = null)
         }
+    }
+
+    /**
+     * Returns application category marked [Category], but android provides it only on api >= 26,
+     * on lower models category unknown
+     */
+
+    private suspend fun getApplicationCategory(info: PackageInfo): @Category Int? {
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            info.applicationInfo.category
+        } else null
     }
 
     private suspend fun combineApplicationStats(usageEvents: UsageEvents, appInfo: Map<String, AppInformation>): List<LaunchedApp> {
@@ -99,6 +128,7 @@ class UsageStatsManagerImpl @Inject constructor(
                 appName = appInfo?.name ?: "-",
                 launches = mutableListOf(Pair(first = previousUsageEvent.timeStamp, second = usageEventTimeStamp)),
                 nonSystem = !(appInfo?.isAppSystem ?: true),
+                appCategory = appInfo?.appCategory
             )
         }
     }

@@ -2,11 +2,8 @@ package com.arjental.taimukka.data.cash.holders
 
 import com.arjental.taimukka.data.cash.Database
 import com.arjental.taimukka.entities.data.cash.ApplicationStatsCash
-import com.arjental.taimukka.entities.data.cash.toDomain
-import com.arjental.taimukka.entities.domain.stats.LaunchedAppDomain
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface ApplicationsStatsHolder {

@@ -13,8 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,13 +21,13 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.arjental.taimukka.entities.presentaion.applist.AppListItemPres
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
+import com.arjental.taimukka.other.utils.resources.getAppCategoryName
 import com.arjental.taimukka.presentaion.ui.components.header.THeader
 import com.arjental.taimukka.presentaion.ui.components.uiutils.ScreenPart
 import com.arjental.taimukka.presentaion.ui.components.uiutils.TPreviewWrap
 import com.arjental.taimukka.presentaion.ui.images.TIcons
 import com.arjental.taimukka.presentaion.ui.images.ticons.Follow
 import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Control
-import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Stats
 import com.arjental.taimukka.presentaion.ui.screens.tabs.apps.AppListVM
 import com.arjental.taimukka.presentaion.ui.screens.tabs.apps.ApplicationsListState
 
@@ -64,7 +63,9 @@ fun AppList(state: State<ApplicationsListState>) {
             item(
                 key = app.packageName
             ) {
-                AppListItem(app)
+                val ctx = LocalContext.current
+                val category = remember { getAppCategoryName(appCategory = app.appCategory, context = ctx) }
+                AppListItem(item = app, category = category)
             }
         }
 
@@ -78,17 +79,20 @@ fun AppList(state: State<ApplicationsListState>) {
 fun Foo() {
     TPreviewWrap {
         AppListItem(
-            AppListItemPres(title = "Tinkoff", packageName = "com.tinkoff.bank", appIcon = null, nonSystem = true)
+            item = AppListItemPres(title = "Tinkoff", packageName = "com.tinkoff.bank", appIcon = null, nonSystem = true, appCategory = 0),
+            category = "somecategory"
         )
     }
 }
 
 @Composable
 fun AppListItem(
-    item: AppListItemPres
+    item: AppListItemPres,
+    category: String?
 ) {
     val startP = remember { 16.dp }
     val endP = remember { 16.dp }
+    val context = LocalContext.current
     ConstraintLayout(
         modifier = Modifier
             .fillMaxWidth()
@@ -134,7 +138,7 @@ fun AppListItem(
                     width = Dimension.fillToConstraints
 
                 },
-            text = "category",
+            text = category ?: "",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

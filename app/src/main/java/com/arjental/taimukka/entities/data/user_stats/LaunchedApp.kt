@@ -2,12 +2,14 @@ package com.arjental.taimukka.entities.data.user_stats
 
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppDomain
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppTimeMarkDomain
+import com.arjental.taimukka.other.utils.annotataions.Category
 
 class LaunchedApp(
     val appPackage: String,
     val appName: String,
     val nonSystem: Boolean,
     val launches: MutableList<Pair<Long, Long>>,
+    @Category val appCategory: Int?,
 )
 
 suspend fun List<LaunchedApp>.toDomain(): List<LaunchedAppDomain> {
@@ -16,6 +18,7 @@ suspend fun List<LaunchedApp>.toDomain(): List<LaunchedAppDomain> {
             appPackage = app.appPackage,
             appName = app.appName,
             nonSystem = app.nonSystem,
+            appCategory = app.appCategory,
             launches = app.launches.map {
                 LaunchedAppTimeMarkDomain(
                     from = it.first,

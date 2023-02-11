@@ -3,6 +3,7 @@ package com.arjental.taimukka.entities.data.cash
 import androidx.room.*
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppDomain
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppTimeMarkDomain
+import com.arjental.taimukka.other.utils.annotataions.Category
 import java.util.*
 
 data class ApplicationStatsCash(
@@ -19,6 +20,7 @@ class ApplicationInfoCash(
     @ColumnInfo(name = "app_package") @PrimaryKey val appPackage: String,
     @ColumnInfo(name = "app_name") val appName: String,
     @ColumnInfo(name = "app_non_system") val nonSystem: Boolean,
+    @ColumnInfo(name = "app_category") @Category val appCategory: Int? = null,
 )
 
 @Entity(tableName = "applications_time_marks")
@@ -39,6 +41,7 @@ suspend fun List<ApplicationStatsCash>.toDomain() = this.map {
                 from = timeMark.from,
                 to = timeMark.to
             )
-        }
+        },
+        appCategory = it.appInfo.appCategory
     )
 }

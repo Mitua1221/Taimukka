@@ -45,12 +45,24 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("release")
+            manifestPlaceholders.putAll(
+                mapOf(
+                    "appIcon" to "@mipmap/ic_launcher",
+                    "appRoundIcon" to "@mipmap/ic_launcher_round",
+                )
+            )
         }
         getByName("debug") {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("debug")
             versionNameSuffix = "-debug"
             applicationIdSuffix = ".debug"
+            manifestPlaceholders.putAll(
+                mapOf(
+                    "appIcon" to "@mipmap/ic_launcher_debug",
+                    "appRoundIcon" to "@mipmap/ic_launcher_debug_round",
+                )
+            )
         }
     }
     compileOptions {

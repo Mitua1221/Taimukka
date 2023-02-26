@@ -85,25 +85,34 @@ class UsageStatsManagerImpl @Inject constructor(
 
         val map = mutableMapOf<String, LaunchedApp>()
 
-        var previousUsageEvent: UsageEvents.Event? = null
+        //count screen launches events -> args is package name, activity class name to [UsageEvents]
+        val applicationScreenLaunches = mutableMapOf<String, MutableMap<String, UsageEvents.Event>>()
 
         while (usageEvents.hasNextEvent()) {
 
             val usageEvent = UsageEvents.Event()
             usageEvents.getNextEvent(usageEvent)
 
-            if (previousUsageEvent != null) {
-                combinePreviousUsage(
-                    usageEventTimeStamp = usageEvent.timeStamp,
-                    map = map,
-                    previousUsageEvent = previousUsageEvent,
-                    appInfo = appInfo[previousUsageEvent.packageName]
-                )
+            //count events type of screen show/hide
+            if (usageEvent.eventType == UsageEvents.Event.ACTIVITY_RESUMED || //android 7.0 resume/stop problem
+                usageEvent.eventType == UsageEvents.Event.ACTIVITY_PAUSED) {
+                if (usageEvent.eventType == UsageEvents.Event.ACTIVITY_PAUSED) { //if previous was resumed state
+                    val previousUsageEvent = applicationScreenLaunches[usageEvent.packageName]?.get(usageEvent.className)
+                    if (previousUsageEvent != null) {
+                        combinePreviousUsage(
+                            usageEventTimeStamp = usageEvent.timeStamp,
+                            map = map,
+                            previousUsageEvent = previousUsageEvent,
+                            appInfo = appInfo[previousUsageEvent.packageName]
+                        )
+                    }
+                } else { //if application screens launched
+                    val packageLaunchesMap = applicationScreenLaunches[usageEvent.packageName] ?: mutableMapOf()
+                    packageLaunchesMap[usageEvent.className] = usageEvent
+                    applicationScreenLaunches[usageEvent.packageName] = packageLaunchesMap
+                }
             }
-
-            previousUsageEvent = usageEvent
         }
-
         return map.values.toList()
     }
 

@@ -5,11 +5,11 @@ import com.arjental.taimukka.presentaion.ui.screens.tabs.control.ControlTab
 import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.SettingsTab
 import com.arjental.taimukka.presentaion.ui.screens.tabs.stats.StatsTab
 
-val startTab = SettingsTab()
+val startTab = AppListTab()
 
 val navigationTabs = listOf(
     StatsTab(),
-    AppListTab(),
-    ControlTab(),
     startTab,
+    ControlTab(),
+    SettingsTab(),
 )

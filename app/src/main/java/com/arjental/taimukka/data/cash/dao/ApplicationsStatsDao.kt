@@ -24,6 +24,16 @@ interface ApplicationsStatsDao {
     @Query("SELECT * FROM applications_info")
     suspend fun getApplications(): List<ApplicationStatsCash>
 
+//    @Transaction
+//    @Query("SELECT DISTINCT * FROM applications_info INNER JOIN applications_time_marks " +
+//            "ON applications_info.app_package = applications_time_marks.app_package_sync " +
+//            "WHERE applications_time_marks.`from` >= (:from) " +
+//            "AND  applications_time_marks.`to` <= (:to) ")
+//    suspend fun getApplications(from: Long, to: Long): List<ApplicationStatsCash>
+
+    @Query("DELETE FROM applications_info")
+    suspend fun clear()
+
 //    @Update
 //    suspend fun updateCashedUser(user: CashedUserEntity)
 //

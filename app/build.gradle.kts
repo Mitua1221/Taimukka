@@ -80,13 +80,15 @@ dependencies {
     implementation ("androidx.core:core-splashscreen:1.0.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
     testImplementation ("junit:junit:4.13.2")
     androidTestImplementation ("androidx.test.ext:junit:1.1.4")
     androidTestImplementation ("androidx.test.espresso:espresso-core:3.5.0")
 
-    //Compose
+    //date and time
+    implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+    implementation ("org.ocpsoft.prettytime:prettytime:5.0.4.Final")
 
+    //Compose
     implementation ("androidx.compose.foundation:foundation:1.4.0-alpha03")
     implementation ("androidx.compose.runtime:runtime:1.4.0-alpha03")
     implementation ("androidx.compose.ui:ui:1.3.2")

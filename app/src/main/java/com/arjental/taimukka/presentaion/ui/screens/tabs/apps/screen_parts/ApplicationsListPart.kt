@@ -1,5 +1,6 @@
 package com.arjental.taimukka.presentaion.ui.screens.tabs.apps.screen_parts
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,17 +20,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
+import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import com.arjental.taimukka.entities.presentaion.applist.AppListItemPres
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
+import com.arjental.taimukka.other.utils.resources.formatMillisToPresentation
 import com.arjental.taimukka.other.utils.resources.getAppCategoryName
+import com.arjental.taimukka.presentaion.ui.components.filters.TFilters
 import com.arjental.taimukka.presentaion.ui.components.header.THeader
 import com.arjental.taimukka.presentaion.ui.components.uiutils.ScreenPart
-import com.arjental.taimukka.presentaion.ui.components.uiutils.TPreviewWrap
 import com.arjental.taimukka.presentaion.ui.images.TIcons
 import com.arjental.taimukka.presentaion.ui.images.ticons.Follow
 import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Control
 import com.arjental.taimukka.presentaion.ui.screens.tabs.apps.AppListVM
 import com.arjental.taimukka.presentaion.ui.screens.tabs.apps.ApplicationsListState
+import kotlinx.datetime.DateTimePeriod
 
 class ApplicationsListPart : ScreenPart() {
 
@@ -40,14 +45,16 @@ class ApplicationsListPart : ScreenPart() {
 
         val viewModel = daggerViewModel<AppListVM>()
         val state = viewModel.appListState().collectAsState()
+        val timeline = viewModel.timeline().collectAsState()
 
-        AppList(state)
+
+        AppList(screenState = state, timelineState = timeline)
     }
 
 }
 
 @Composable
-fun AppList(state: State<ApplicationsListState>) {
+fun AppList(screenState: State<ApplicationsListState>, timelineState: State<Timeline?>) {
 
     LazyColumn {
 
@@ -55,11 +62,24 @@ fun AppList(state: State<ApplicationsListState>) {
             key = "appListTitle"
         ) {
             THeader(
-                title = stringResource(id = state.value.title)
+                title = stringResource(id = screenState.value.title)
             )
         }
 
-        state.value.list.forEach { app ->
+        item(
+            key = "filters"
+        ) {
+            val viewModel = daggerViewModel<AppListVM>()
+            TFilters(
+                modifier = Modifier.padding(bottom = 16.dp),
+                timelineState = timelineState,
+                changeTimeline = {
+                    viewModel.changeTimeline(it)
+                })
+        }
+
+
+        screenState.value.list.forEach { app ->
             item(
                 key = app.packageName
             ) {
@@ -77,18 +97,16 @@ fun AppList(state: State<ApplicationsListState>) {
 @Preview
 @Composable
 fun Foo() {
-    TPreviewWrap {
-        AppListItem(
-            item = AppListItemPres(title = "Tinkoff", packageName = "com.tinkoff.bank", appIcon = null, nonSystem = true, appCategory = 0),
-            category = "somecategory"
-        )
-    }
+    AppListItem(
+        item = AppListItemPres(title = "Tinkoff", packageName = "com.tinkoff.bank", appIcon = null, nonSystem = true, appCategory = 0),
+        category = "somecategory"
+    )
 }
 
 @Composable
 fun AppListItem(
     item: AppListItemPres,
-    category: String?
+    category: String? = null
 ) {
     val startP = remember { 16.dp }
     val endP = remember { 16.dp }
@@ -103,8 +121,8 @@ fun AppListItem(
         if (item.appIcon != null) {
             Image(
                 modifier = Modifier
-                    .height(24.dp)
-                    .width(24.dp)
+                    .height(48.dp)
+                    .width(48.dp)
                     .constrainAs(appLogo) {
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
@@ -116,8 +134,8 @@ fun AppListItem(
         } else {
             Image(
                 modifier = Modifier
-                    .height(24.dp)
-                    .width(24.dp)
+                    .height(48.dp)
+                    .width(48.dp)
                     .constrainAs(appLogo) {
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
@@ -129,37 +147,42 @@ fun AppListItem(
             )
         }
 
-        Text(
-            modifier = Modifier
-                .constrainAs(appCategory) {
-                    top.linkTo(parent.top, margin = 8.dp)
-                    start.linkTo(appLogo.end, margin = 16.dp)
-                    end.linkTo(follow.start, margin = 16.dp)
-                    width = Dimension.fillToConstraints
+        if (!category.isNullOrEmpty()) {
+            Text(
+                modifier = Modifier
+                    .constrainAs(appCategory) {
+                        top.linkTo(parent.top, margin = 8.dp)
+                        start.linkTo(appLogo.end, margin = 16.dp)
+                        end.linkTo(follow.start, margin = 16.dp)
+                        width = Dimension.fillToConstraints
 
-                },
-            text = category ?: "",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+                    },
+                text = category,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
 
         Text(
             modifier = Modifier
                 .constrainAs(appTitle) {
-                    top.linkTo(appCategory.bottom)
+                    if (!category.isNullOrEmpty())
+                        top.linkTo(appCategory.bottom)
+                    else
+                        top.linkTo(parent.top, margin = 8.dp)
                     start.linkTo(appLogo.end, margin = 16.dp)
                     end.linkTo(follow.start, margin = 16.dp)
                     width = Dimension.fillToConstraints
                 },
             text = item.title,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurface,
         )
 
         val startGuideline = createGuidelineFromStart(0.64f)
 
         LinearProgressIndicator(
-            progress = 0.5f,
+            progress = item.percentage,
             modifier = Modifier.constrainAs(appBar) {
                 top.linkTo(appTitle.bottom, margin = 12.dp)
                 start.linkTo(appLogo.end, margin = 16.dp)
@@ -171,6 +194,14 @@ fun AppListItem(
             trackColor = MaterialTheme.colorScheme.surfaceVariant,
         )
 
+
+        val appTimeText = remember {
+            when (item.selectionType) {
+                SelectionType.SCREEN_TIME -> formatMillisToPresentation(context, item.realQuality)
+                else -> error("SelectionType not handled on ui")
+            }
+        }
+
         Text(
             modifier = Modifier
                 .constrainAs(appTime) {
@@ -180,7 +211,7 @@ fun AppListItem(
                     bottom.linkTo(appBar.bottom)
                     width = Dimension.fillToConstraints
                 },
-            text = "appname",
+            text = appTimeText,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -206,3 +237,6 @@ fun AppListItem(
     )
 
 }
+
+
+

@@ -3,9 +3,13 @@ package com.arjental.taimukka.data.cash.holders
 import com.arjental.taimukka.data.cash.Database
 import com.arjental.taimukka.data.settings.ColorScheme
 import com.arjental.taimukka.entities.data.cash.AppSettings
+import com.arjental.taimukka.entities.pierce.timeline.Timeline
+import com.arjental.taimukka.entities.pierce.timeline.TimelineType
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface SettingsHolder {
@@ -14,6 +18,12 @@ interface SettingsHolder {
     suspend fun isDarkThemeEnabled(): Boolean
     suspend fun setDarkTheme(enabled: Boolean)
     fun getColorScheme(): Flow<ColorScheme>
+    fun getTimelineSelection(): Flow<Timeline>
+
+    /**
+     * Set selection from, to
+     */
+    suspend fun setTimelineSelection(timeline: Timeline)
 }
 
 class SettingsHolderImpl @Inject constructor(
@@ -22,6 +32,10 @@ class SettingsHolderImpl @Inject constructor(
 
     private val USE_SYSTEM_THEME = "USE_SYSTEM_THEME"
     private val USE_DARK_THEME = "USE_DARK_THEME"
+    //timeline constants
+    private val COMMON_TIMELINE_TYPE = "COMMON_TIMELINE_TYPE"
+    private val COMMON_TIMELINE_FROM = "COMMON_TIMELINE_FROM"
+    private val COMMON_TIMELINE_TO = "COMMON_TIMELINE_TO"
 
     private val TRUE = "TRUE"
     private val FALSE = "FALSE"
@@ -56,8 +70,33 @@ class SettingsHolderImpl @Inject constructor(
                 useDarkMode -> ColorScheme.NIGHT
                 else -> ColorScheme.DAY
             }
-
         }
+
+    override fun getTimelineSelection(): Flow<Timeline> {
+        return settings.getSettingsItemFlow(settingKey = COMMON_TIMELINE_TYPE).map { getTimeline(it?.settingsValue) }.combine(
+            settings.getSettingsItemFlow(settingKey = COMMON_TIMELINE_FROM).map { it?.settingsValue?.toLongOrNull() }
+        ) { timelineType, from ->
+            Timeline(timelineType = timelineType, from = from)
+        }.combine(
+            settings.getSettingsItemFlow(settingKey = COMMON_TIMELINE_TO).map { it?.settingsValue?.toLongOrNull() }
+        ) { timeline, to ->
+            timeline.copy(to = to)
+        }
+    }
+
+    private fun getTimeline(type: String?): TimelineType {
+        return try {
+            TimelineType.valueOf(type ?: return TimelineType.WEEK)
+        } catch (e: IllegalArgumentException) {
+            return TimelineType.WEEK
+        }
+    }
+
+    override suspend fun setTimelineSelection(timeline: Timeline) = coroutineScope {
+        launch { settings.setSettingsItem(wrap(k = COMMON_TIMELINE_TYPE, v = timeline.timelineType.name)) }
+        settings.setSettingsItem(wrap(k = COMMON_TIMELINE_FROM, v = timeline.from.toString()))
+        settings.setSettingsItem(wrap(k = COMMON_TIMELINE_TO, v = timeline.to.toString()))
+    }
 
 
 }

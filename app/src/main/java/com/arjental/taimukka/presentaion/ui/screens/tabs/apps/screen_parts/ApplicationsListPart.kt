@@ -1,6 +1,5 @@
 package com.arjental.taimukka.presentaion.ui.screens.tabs.apps.screen_parts
 
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
-import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import com.arjental.taimukka.entities.presentaion.applist.AppListItemPres
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
 import com.arjental.taimukka.other.utils.resources.formatMillisToPresentation
@@ -34,7 +32,6 @@ import com.arjental.taimukka.presentaion.ui.images.ticons.Follow
 import com.arjental.taimukka.presentaion.ui.images.ticons.tabs.Control
 import com.arjental.taimukka.presentaion.ui.screens.tabs.apps.AppListVM
 import com.arjental.taimukka.presentaion.ui.screens.tabs.apps.ApplicationsListState
-import kotlinx.datetime.DateTimePeriod
 
 class ApplicationsListPart : ScreenPart() {
 
@@ -45,16 +42,15 @@ class ApplicationsListPart : ScreenPart() {
 
         val viewModel = daggerViewModel<AppListVM>()
         val state = viewModel.appListState().collectAsState()
-        val timeline = viewModel.timeline().collectAsState()
 
 
-        AppList(screenState = state, timelineState = timeline)
+        AppList(screenState = state)
     }
 
 }
 
 @Composable
-fun AppList(screenState: State<ApplicationsListState>, timelineState: State<Timeline?>) {
+fun AppList(screenState: State<ApplicationsListState>) {
 
     LazyColumn {
 
@@ -70,12 +66,17 @@ fun AppList(screenState: State<ApplicationsListState>, timelineState: State<Time
             key = "filters"
         ) {
             val viewModel = daggerViewModel<AppListVM>()
+            val timelineState = viewModel.timeline().collectAsState()
+            val selectedCategoryState = viewModel.selectedCategory().collectAsState()
             TFilters(
                 modifier = Modifier.padding(bottom = 16.dp),
                 timelineState = timelineState,
                 changeTimeline = {
                     viewModel.changeTimeline(it)
-                })
+                },
+                categoriesState = selectedCategoryState,
+                changeCategory = { viewModel.selectCategory(it) }
+            )
         }
 
 

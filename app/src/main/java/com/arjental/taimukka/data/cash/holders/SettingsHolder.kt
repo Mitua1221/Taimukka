@@ -24,6 +24,18 @@ interface SettingsHolder {
      * Set selection from, to
      */
     suspend fun setTimelineSelection(timeline: Timeline)
+
+    /**
+     * Category is always int
+     * If it returns -1 or null category is not selected
+     */
+    fun getCategorySelection(): Flow<Int?>
+
+    /**
+     * Save category, if category is not selected because we clear it, we can save -1,
+     * but not forget to support it in [getCategorySelection] method.
+     */
+    suspend fun setCategorySelection(category: Int?)
 }
 
 class SettingsHolderImpl @Inject constructor(
@@ -32,10 +44,14 @@ class SettingsHolderImpl @Inject constructor(
 
     private val USE_SYSTEM_THEME = "USE_SYSTEM_THEME"
     private val USE_DARK_THEME = "USE_DARK_THEME"
+
     //timeline constants
     private val COMMON_TIMELINE_TYPE = "COMMON_TIMELINE_TYPE"
     private val COMMON_TIMELINE_FROM = "COMMON_TIMELINE_FROM"
     private val COMMON_TIMELINE_TO = "COMMON_TIMELINE_TO"
+
+    //selected category for filter
+    private val SELECTED_CATEGORY = "SELECTED_CATEGORY"
 
     private val TRUE = "TRUE"
     private val FALSE = "FALSE"
@@ -43,6 +59,10 @@ class SettingsHolderImpl @Inject constructor(
     private val settings by lazy { database.settings() }
 
     private fun ki(b: Boolean) = if (b) TRUE else FALSE
+
+    /**
+     * Helps to wrap creation of [AppSettings] object that stores info in settings db
+     */
     private fun wrap(k: String, v: String) = AppSettings(settingsKey = k, settingsValue = v)
 
     override suspend fun isSystemThemeUsed(): Boolean {
@@ -96,6 +116,16 @@ class SettingsHolderImpl @Inject constructor(
         launch { settings.setSettingsItem(wrap(k = COMMON_TIMELINE_TYPE, v = timeline.timelineType.name)) }
         settings.setSettingsItem(wrap(k = COMMON_TIMELINE_FROM, v = timeline.from.toString()))
         settings.setSettingsItem(wrap(k = COMMON_TIMELINE_TO, v = timeline.to.toString()))
+    }
+
+    override fun getCategorySelection(): Flow<Int?> =
+        settings.getSettingsItemFlow(settingKey = SELECTED_CATEGORY).map {
+            val value = it?.settingsValue?.toInt()
+            if (value == -1) null else value
+        }
+
+    override suspend fun setCategorySelection(category: Int?) {
+        settings.setSettingsItem(wrap(k = SELECTED_CATEGORY, v = category?.toString() ?: (-1).toString()))
     }
 
 

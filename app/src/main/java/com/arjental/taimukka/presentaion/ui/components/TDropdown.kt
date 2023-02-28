@@ -19,7 +19,8 @@ import androidx.compose.ui.unit.dp
 
 data class TDropdownItem(
     val type: String,
-    @StringRes val titleRes: Int,
+    val title: String? = null,
+    @StringRes val titleRes: Int? = null,
 )
 
 @Composable
@@ -50,7 +51,7 @@ fun TDropdown(
                     setExpanded(false)
                 }, text = {
                     Text(
-                        text = stringResource(id = item.titleRes),
+                        text = item.title ?: item.titleRes?.let { stringRes -> stringResource(id = stringRes ) }  ?: "",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                     )

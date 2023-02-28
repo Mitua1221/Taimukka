@@ -42,6 +42,7 @@
     <string name="filters_timeline_week">Week</string>
     <string name="filters_timeline_month">Month</string>
     <string name="filters_timeline_day">Day</string>
+    <string name="filters_categories_all">All categories</string>
 
     <!--timeline selection-->
     <string name="tilmeline_year">%1$s y</string>

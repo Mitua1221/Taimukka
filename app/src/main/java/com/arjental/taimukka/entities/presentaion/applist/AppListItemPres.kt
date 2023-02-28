@@ -35,3 +35,12 @@ suspend fun List<LaunchedAppDomain>.toPresentation(context: Context): ImmutableL
         )
     }.toImmutableList()
 }
+
+/**
+ * Filter list to show only values with category
+ */
+
+suspend fun ImmutableList<AppListItemPres>.filterWithCategory(categoryType: Int?): ImmutableList<AppListItemPres> {
+    if (categoryType == null) return this
+    return this.filter { it.appCategory == categoryType }.toImmutableList()
+}

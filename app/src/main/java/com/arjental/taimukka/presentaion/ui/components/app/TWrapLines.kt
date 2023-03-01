@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.Navigator
 import com.arjental.taimukka.presentaion.ui.components.uiutils.LocalDisplayFeatures
 import com.arjental.taimukka.presentaion.ui.components.uiutils.ScreenPart
@@ -19,6 +20,9 @@ import com.google.accompanist.adaptive.TwoPane
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+/**
+ * @param singleRawBackPressed plays only when user pressed back when single raw shows
+ */
 
 @Composable
 fun TWrapLines(
@@ -27,7 +31,8 @@ fun TWrapLines(
     secondColumnScreens: ImmutableList<ScreenPart> = persistentListOf(),
     firstColumnNative: @Composable () -> Unit = { EmptyScreenContent() },
     secondColumnNative: @Composable () -> Unit = { EmptyScreenContent() },
-    splitFraction: Float = 0.4f
+    splitFraction: Float = 0.4f,
+    singleRawBackPressed: (ScreenPart) -> Unit = {}
 ) {
 
     if (isDual()) {
@@ -76,7 +81,30 @@ fun TWrapLines(
     } else {
         Box(modifier = modifier.fillMaxSize()) {
             firstColumnScreens.firstOrNull()?.let { screen ->
-                Navigator(screen = screen)
+                Navigator(screen = screen, onBackPressed = {
+                    singleRawBackPressed(it as ScreenPart)
+                    true
+                }) { localNavigator ->
+
+                    secondColumnScreens.forEach {
+
+                        when {
+                            //screen can be added in stack, screen can be duplicated
+                            it.onElevated && it.canDuplicate -> {
+                                TODO("NOT IMPLEMENTED, can it be added twice?")
+                            }
+                            //screen can be added in stack, screen cant be duplicated
+                            it.onElevated -> {
+                                if (!localNavigator.items.contains(it)) {
+                                    localNavigator.push(it)
+                                }
+                            }
+                        }
+
+                    }
+
+                    CurrentScreen()
+                }
             } ?: firstColumnNative()
         }
     }

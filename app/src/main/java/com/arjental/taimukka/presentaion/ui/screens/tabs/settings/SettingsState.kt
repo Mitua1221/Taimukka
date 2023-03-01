@@ -23,7 +23,11 @@ class SettingsState(
         /*AuthorizationPart()*/
     ),
     override val full: ImmutableList<ScreenPart> = persistentListOf(),
-) : DividedScreens
+) : DividedScreens {
+    override fun elevated(screenPart: ScreenPart, foundInRight: Boolean): DividedScreens {
+        TODO("Not yet implemented")
+    }
+}
 
 
 /**

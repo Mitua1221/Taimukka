@@ -2,6 +2,7 @@ package com.arjental.taimukka.presentaion.ui.screens.tabs.apps.screen_parts
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.LinearProgressIndicator
@@ -52,6 +53,8 @@ class ApplicationsListPart : ScreenPart() {
 @Composable
 fun AppList(screenState: State<ApplicationsListState>) {
 
+    val viewModel = daggerViewModel<AppListVM>()
+
     LazyColumn {
 
         item(
@@ -65,7 +68,6 @@ fun AppList(screenState: State<ApplicationsListState>) {
         item(
             key = "filters"
         ) {
-            val viewModel = daggerViewModel<AppListVM>()
             val timelineState = viewModel.timeline().collectAsState()
             val selectedCategoryState = viewModel.selectedCategory().collectAsState()
             TFilters(
@@ -86,7 +88,7 @@ fun AppList(screenState: State<ApplicationsListState>) {
             ) {
                 val ctx = LocalContext.current
                 val category = remember { getAppCategoryName(appCategory = app.appCategory, context = ctx) }
-                AppListItem(item = app, category = category)
+                AppListItem(item = app, category = category, onClick = { viewModel.selectApplication(it) })
             }
         }
 
@@ -100,143 +102,150 @@ fun AppList(screenState: State<ApplicationsListState>) {
 fun Foo() {
     AppListItem(
         item = AppListItemPres(title = "Tinkoff", packageName = "com.tinkoff.bank", appIcon = null, nonSystem = true, appCategory = 0),
-        category = "somecategory"
+        category = "somecategory",
+        onClick = {  }
     )
 }
 
 @Composable
 fun AppListItem(
     item: AppListItemPres,
-    category: String? = null
+    category: String? = null,
+    onClick: (AppListItemPres) -> Unit
 ) {
-    val startP = remember { 16.dp }
-    val endP = remember { 16.dp }
-    val context = LocalContext.current
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = startP, end = endP)
-    ) {
-        val (appLogo, appCategory, appTitle, appBar, appTime, follow) = createRefs()
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .clickable {
+            onClick(item)
+        }) {
+        val startP = remember { 16.dp }
+        val endP = remember { 16.dp }
+        val context = LocalContext.current
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = startP, end = endP)
+        ) {
+            val (appLogo, appCategory, appTitle, appBar, appTime, follow) = createRefs()
 
-        if (item.appIcon != null) {
-            Image(
-                modifier = Modifier
-                    .height(48.dp)
-                    .width(48.dp)
-                    .constrainAs(appLogo) {
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                        start.linkTo(parent.start, margin = 16.dp)
-                    },
-                bitmap = item.appIcon,
-                contentDescription = stringResource(id = com.arjental.taimukka.R.string.applications_application_logo, item.title),
-            )
-        } else {
-            Image(
-                modifier = Modifier
-                    .height(48.dp)
-                    .width(48.dp)
-                    .constrainAs(appLogo) {
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                        start.linkTo(parent.start, margin = 16.dp)
-                    },
-                imageVector = TIcons.Control,
-                contentDescription = stringResource(id = com.arjental.taimukka.R.string.applications_application_logo, item.title),
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSurface)
-            )
-        }
+            if (item.appIcon != null) {
+                Image(
+                    modifier = Modifier
+                        .height(48.dp)
+                        .width(48.dp)
+                        .constrainAs(appLogo) {
+                            top.linkTo(parent.top)
+                            bottom.linkTo(parent.bottom)
+                            start.linkTo(parent.start, margin = 16.dp)
+                        },
+                    bitmap = item.appIcon,
+                    contentDescription = stringResource(id = com.arjental.taimukka.R.string.applications_application_logo, item.title),
+                )
+            } else {
+                Image(
+                    modifier = Modifier
+                        .height(48.dp)
+                        .width(48.dp)
+                        .constrainAs(appLogo) {
+                            top.linkTo(parent.top)
+                            bottom.linkTo(parent.bottom)
+                            start.linkTo(parent.start, margin = 16.dp)
+                        },
+                    imageVector = TIcons.Control,
+                    contentDescription = stringResource(id = com.arjental.taimukka.R.string.applications_application_logo, item.title),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSurface)
+                )
+            }
 
-        if (!category.isNullOrEmpty()) {
+            if (!category.isNullOrEmpty()) {
+                Text(
+                    modifier = Modifier
+                        .constrainAs(appCategory) {
+                            top.linkTo(parent.top, margin = 8.dp)
+                            start.linkTo(appLogo.end, margin = 16.dp)
+                            end.linkTo(follow.start, margin = 16.dp)
+                            width = Dimension.fillToConstraints
+
+                        },
+                    text = category,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
             Text(
                 modifier = Modifier
-                    .constrainAs(appCategory) {
-                        top.linkTo(parent.top, margin = 8.dp)
+                    .constrainAs(appTitle) {
+                        if (!category.isNullOrEmpty())
+                            top.linkTo(appCategory.bottom)
+                        else
+                            top.linkTo(parent.top, margin = 8.dp)
                         start.linkTo(appLogo.end, margin = 16.dp)
                         end.linkTo(follow.start, margin = 16.dp)
                         width = Dimension.fillToConstraints
-
                     },
-                text = category,
-                style = MaterialTheme.typography.labelMedium,
+                text = item.title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            val startGuideline = createGuidelineFromStart(0.64f)
+
+            LinearProgressIndicator(
+                progress = item.percentage,
+                modifier = Modifier.constrainAs(appBar) {
+                    top.linkTo(appTitle.bottom, margin = 12.dp)
+                    start.linkTo(appLogo.end, margin = 16.dp)
+                    end.linkTo(startGuideline, margin = 16.dp)
+                    bottom.linkTo(parent.bottom, margin = 20.dp)
+                    width = Dimension.fillToConstraints
+                },
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            )
+
+
+            val appTimeText = remember {
+                when (item.selectionType) {
+                    SelectionType.SCREEN_TIME -> formatMillisToPresentation(context, item.realQuality)
+                    else -> error("SelectionType not handled on ui")
+                }
+            }
+
+            Text(
+                modifier = Modifier
+                    .constrainAs(appTime) {
+                        top.linkTo(appBar.top)
+                        start.linkTo(appBar.end, margin = 10.dp)
+                        end.linkTo(follow.start, margin = 16.dp)
+                        bottom.linkTo(appBar.bottom)
+                        width = Dimension.fillToConstraints
+                    },
+                text = appTimeText,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            Image(
+                modifier = Modifier
+                    .height(24.dp)
+                    .width(24.dp)
+                    .constrainAs(follow) {
+                        top.linkTo(parent.top)
+                        bottom.linkTo(parent.bottom)
+                        end.linkTo(parent.end, margin = 8.dp)
+                    }, imageVector = TIcons.Follow, contentDescription = TIcons.Follow.name, colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSurface)
+            )
+
         }
-
-        Text(
+        Box(
             modifier = Modifier
-                .constrainAs(appTitle) {
-                    if (!category.isNullOrEmpty())
-                        top.linkTo(appCategory.bottom)
-                    else
-                        top.linkTo(parent.top, margin = 8.dp)
-                    start.linkTo(appLogo.end, margin = 16.dp)
-                    end.linkTo(follow.start, margin = 16.dp)
-                    width = Dimension.fillToConstraints
-                },
-            text = item.title,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+                .fillMaxWidth()
+                .height(1.dp)
+                .padding(start = startP, end = endP)
+                .background(color = MaterialTheme.colorScheme.outlineVariant)
         )
-
-        val startGuideline = createGuidelineFromStart(0.64f)
-
-        LinearProgressIndicator(
-            progress = item.percentage,
-            modifier = Modifier.constrainAs(appBar) {
-                top.linkTo(appTitle.bottom, margin = 12.dp)
-                start.linkTo(appLogo.end, margin = 16.dp)
-                end.linkTo(startGuideline, margin = 16.dp)
-                bottom.linkTo(parent.bottom, margin = 20.dp)
-                width = Dimension.fillToConstraints
-            },
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
-        )
-
-
-        val appTimeText = remember {
-            when (item.selectionType) {
-                SelectionType.SCREEN_TIME -> formatMillisToPresentation(context, item.realQuality)
-                else -> error("SelectionType not handled on ui")
-            }
-        }
-
-        Text(
-            modifier = Modifier
-                .constrainAs(appTime) {
-                    top.linkTo(appBar.top)
-                    start.linkTo(appBar.end, margin = 10.dp)
-                    end.linkTo(follow.start, margin = 16.dp)
-                    bottom.linkTo(appBar.bottom)
-                    width = Dimension.fillToConstraints
-                },
-            text = appTimeText,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Image(
-            modifier = Modifier
-                .height(24.dp)
-                .width(24.dp)
-                .constrainAs(follow) {
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    end.linkTo(parent.end, margin = 8.dp)
-                }, imageVector = TIcons.Follow, contentDescription = TIcons.Follow.name, colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onSurface)
-        )
-
     }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .padding(start = startP, end = endP)
-            .background(color = MaterialTheme.colorScheme.outlineVariant)
-    )
-
 }
 
 

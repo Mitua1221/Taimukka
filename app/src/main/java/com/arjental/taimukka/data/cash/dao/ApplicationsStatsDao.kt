@@ -3,7 +3,8 @@ package com.arjental.taimukka.data.cash.dao
 import androidx.room.*
 import com.arjental.taimukka.entities.data.cash.ApplicationInfoCash
 import com.arjental.taimukka.entities.data.cash.ApplicationStatsCash
-import com.arjental.taimukka.entities.data.cash.ApplicationTimeMarksCash
+import com.arjental.taimukka.entities.data.cash.ApplicationForegroundMarksCash
+import com.arjental.taimukka.entities.data.cash.ApplicationNotificationsMarksCash
 
 @Dao
 interface ApplicationsStatsDao {
@@ -18,7 +19,10 @@ interface ApplicationsStatsDao {
     suspend fun setApplications(appList: List<ApplicationInfoCash>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun setApplicationTimeMarks(timeMarksList: List<ApplicationTimeMarksCash>)
+    suspend fun setApplicationForegroundMarks(timeMarksList: List<ApplicationForegroundMarksCash>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun setApplicationNotificationsMarks(notificationMarks: List<ApplicationNotificationsMarksCash>)
 
     @Transaction
     @Query("SELECT * FROM applications_info")

@@ -70,6 +70,7 @@ fun AppList(screenState: State<ApplicationsListState>) {
         ) {
             val timelineState = viewModel.timeline().collectAsState()
             val selectedCategoryState = viewModel.selectedCategory().collectAsState()
+            val selectedTypeState = viewModel.selectedType().collectAsState()
             TFilters(
                 modifier = Modifier.padding(bottom = 16.dp),
                 timelineState = timelineState,
@@ -77,7 +78,11 @@ fun AppList(screenState: State<ApplicationsListState>) {
                     viewModel.changeTimeline(it)
                 },
                 categoriesState = selectedCategoryState,
-                changeCategory = { viewModel.selectCategory(it) }
+                changeCategory = { viewModel.selectCategory(it) },
+                typeState = selectedTypeState,
+                changeType = {
+                    viewModel.changeSelectionType(it)
+                }
             )
         }
 

@@ -28,20 +28,21 @@ class ApplicationsStatsHolderImpl @Inject constructor(
 
     override suspend fun getApplications() = applicationsStats.getApplications()
     override suspend fun getApplications(from: Long, to: Long): List<ApplicationStatsCash> = applicationsStats.getApplications().map { appStatsCache ->
-            appStatsCache.copy(timeMarks = appStatsCache.timeMarks.mapNotNull {
-                when {
-                    it.from < from -> null
-                    it.to > to -> null
-                    else -> it
-                }
-            })
-        }
+        appStatsCache.copy(
+            //here we filtering result to match given from-to
+            foregroundMarks = appStatsCache.foregroundMarks.filter {
+                it.from >= from && it.to <= to
+            },
+            //here we filtering result to match given from-to
+            notificationsMarks = appStatsCache.notificationsMarks.filter { it.time in from..to })
+    }
 
     override suspend fun setApplications(applicationsList: List<ApplicationStatsCash>) = coroutineScope {
         applicationsList.map {
             async {
                 applicationsStats.setApplication(app = it.appInfo)
-                applicationsStats.setApplicationTimeMarks(timeMarksList = it.timeMarks)
+                applicationsStats.setApplicationForegroundMarks(timeMarksList = it.foregroundMarks)
+                applicationsStats.setApplicationNotificationsMarks(notificationMarks = it.notificationsMarks)
             }
         }.forEach { it.await() }
     }

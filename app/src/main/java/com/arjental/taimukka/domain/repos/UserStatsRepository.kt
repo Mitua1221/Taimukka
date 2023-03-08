@@ -6,7 +6,10 @@ import com.arjental.taimukka.data.stats.UsageStatsManager
 import com.arjental.taimukka.entities.data.cash.toDomain
 import com.arjental.taimukka.entities.data.user_stats.toDomain
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppDomain
+import com.arjental.taimukka.entities.domain.stats.LaunchedAppTimeMarkDomain
 import com.arjental.taimukka.entities.domain.stats.toCash
+import com.arjental.taimukka.entities.pierce.SESSION_DEBOUNCE
+import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
 import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import com.arjental.taimukka.entities.pierce.timeline.TimelineType
 import com.arjental.taimukka.entities.pierce.timeline.TimelineTypeMax
@@ -21,19 +24,22 @@ import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 interface UserStatsRepository {
-    suspend fun applicationsStats(timeline: Timeline): Flow<Resource<List<LaunchedAppDomain>>>
+    suspend fun applicationsStats(timeline: Timeline, selectionType: SelectionType): Flow<Resource<List<LaunchedAppDomain>>>
 
     /**
-     * @param startTimeForManager time that manager have to begin scanning device
-     * @param endTimeForManager time that manager have to stop scanning device
-     * @param startTimeForCache time that we have to get notes for cache
-     * @param endTimeForCache time that we have to end notes for cache
+     * @param manager  holds real timestamp **|from|----|to|** in millis that we have to get from devices, because we dont have this data in cache
+     * @param cache holds real timestamp **|from|----|to|** in millis that we have to get from cache, because this data already in cache
      */
 
     class MergedTimes(
         val manager: Select?,
         val cache: Select?,
     )
+
+    /**
+     * @param from timestamp in millis - start of selection
+     * @param to timestamp in millis - end of selection
+     */
 
     data class Select(
         val from: Long,
@@ -50,8 +56,9 @@ class UserStatsRepositoryImpl @Inject constructor(
 
     //TODO we have to filter it in sql, but idk how to do that
     //TODO we lost active application timeline when its running
+    //TODO merge activity periods if its less that a seconds between
 
-    override suspend fun applicationsStats(timeline: Timeline): Flow<Resource<List<LaunchedAppDomain>>> = channelFlow {
+    override suspend fun applicationsStats(timeline: Timeline, selectionType: SelectionType): Flow<Resource<List<LaunchedAppDomain>>> = channelFlow {
         send(Resource.loading())
         //Get cache updated times
         val cacheUpdateTimes = updateTimesHolder.getAppCacheTimestamps()
@@ -101,7 +108,11 @@ class UserStatsRepositoryImpl @Inject constructor(
             else -> merge(cash = cashedStats.await()!!, stats = managerStats.await()!!.associateBy { it.appPackage }.toMutableMap())
         }
         //count percentages and values
-        val elementsWithPercents = countTimelinesUsageInterest(mergedElements)
+        val elementsWithPercents = when (selectionType) {
+            SelectionType.SCREEN_TIME -> countTimelinesUsageInterest(mergedElements)
+            SelectionType.NOTIFICATIONS -> countNotifications(mergedElements)
+            SelectionType.SEANCES -> countSeances(mergedElements)
+        }.sortedByDescending { it.realQuality }
         //paste
         send(Resource.success(data = elementsWithPercents))
     }
@@ -194,27 +205,83 @@ class UserStatsRepositoryImpl @Inject constructor(
      * Counts the timeline, gets the total number of milliseconds in the application for the period
      * accordingly calculates the total amount of time in the application for the period
      * calculates the percentage for each application
-     * @return sorted list
+     * @return list not sorted
      */
 
     private suspend fun countTimelinesUsageInterest(applications: List<LaunchedAppDomain>): List<LaunchedAppDomain> = coroutineScope {
         val m = Mutex()
         var allApplicationRuntimeInMillis = 0L //all applications time
-        val applicationRuntimeInMillis: (LaunchedAppDomain) -> Long = { app -> //count only 1 app time
+        //count only 1 app time
+        val applicationRuntimeInMillis: (LaunchedAppDomain) -> Long = { app ->
             app.launches.sumOf { it.to - it.from }
         }
         return@coroutineScope applications.map { //in app list
             async {
                 val appRuntime = applicationRuntimeInMillis(it)
                 m.withLock { allApplicationRuntimeInMillis += appRuntime } //increment with sync
-                it to appRuntime //pair is package to appRuntime
+                it to appRuntime
             }
         }.map {
             it.await()
         }.map {
             val percentage = it.second.divideToPercent(allApplicationRuntimeInMillis)
-            it.first.copy(percentage = percentage, realQuality = it.second)
+            it.first.copy(percentage = percentage, realQuality = it.second, )
         }.sortedByDescending { it.realQuality }
+    }
+
+    /**
+     * Count seances of application and its percentage defined on all launched applications.
+     *
+     * Seance means that activity not in foreground (after onPause) more than [SESSION_DEBOUNCE] seconds.
+     */
+    private suspend fun countSeances(applications: List<LaunchedAppDomain>): List<LaunchedAppDomain> = coroutineScope {
+        val m = Mutex()
+        var allApplicationsLaunchQuality = 0 //all applications launches
+        //counting sessions
+        val applicationSessionsQuality: (LaunchedAppDomain) -> Int = { app ->
+            val sortedByLaunches = app.launches.sortedBy { it.from } //sort by from time
+            var previousElement: LaunchedAppTimeMarkDomain? = null
+            var applicationSessionQuality = 0
+            sortedByLaunches.forEachIndexed { index, element ->
+                if (previousElement != null) {
+                    val millisBetweenSessions = element.from - previousElement!!.to
+                    if (millisBetweenSessions > SESSION_DEBOUNCE) {
+                        applicationSessionQuality++
+                    }
+                } else {
+                    applicationSessionQuality++ //if first session
+                }
+                previousElement = element
+            }
+            applicationSessionQuality
+        }
+        return@coroutineScope applications.map { //in app list
+            async {
+                val applicationSessionsQuality = applicationSessionsQuality(it) // count session quality for app
+                m.withLock { allApplicationsLaunchQuality += applicationSessionsQuality }//remember to know all applications launches quality
+                it to applicationSessionsQuality
+            }
+        }.map {
+            it.await()
+        }.map {
+            val percentage = it.second.divideToPercent(allApplicationsLaunchQuality)
+            it.first.copy(percentage = percentage, realQuality = it.second.toLong(), )
+        }
+    }
+
+    /**
+     * Count notifications size in all applications and its common percentage.
+     */
+    private suspend fun countNotifications(applications: List<LaunchedAppDomain>): List<LaunchedAppDomain> {
+        var allApplicationsNotifications = 0 //all notificationsQuality
+        return applications.map { //in app list
+            val notificationsSize = it.notificationsMarks.size
+            allApplicationsNotifications += notificationsSize
+            it to notificationsSize
+        }.map {
+            val percentage = it.second.divideToPercent(allApplicationsNotifications)
+            it.first.copy(percentage = percentage, realQuality = it.second.toLong(), )
+        }
     }
 
 }

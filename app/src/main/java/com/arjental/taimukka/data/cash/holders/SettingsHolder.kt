@@ -3,6 +3,7 @@ package com.arjental.taimukka.data.cash.holders
 import com.arjental.taimukka.data.cash.Database
 import com.arjental.taimukka.data.settings.ColorScheme
 import com.arjental.taimukka.entities.data.cash.AppSettings
+import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
 import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import com.arjental.taimukka.entities.pierce.timeline.TimelineType
 import kotlinx.coroutines.coroutineScope
@@ -36,6 +37,16 @@ interface SettingsHolder {
      * but not forget to support it in [getCategorySelection] method.
      */
     suspend fun setCategorySelection(category: Int?)
+
+    /**
+     * Get selected category that selected now, defined by [SelectionType].
+     */
+    fun getTypeSelection(): Flow<SelectionType>
+
+    /**
+     * Save selected type for all app, typed by [SelectionType]
+     */
+    suspend fun setTypeSelection(selectionType: SelectionType)
 }
 
 class SettingsHolderImpl @Inject constructor(
@@ -52,6 +63,9 @@ class SettingsHolderImpl @Inject constructor(
 
     //selected category for filter
     private val SELECTED_CATEGORY = "SELECTED_CATEGORY"
+
+    //selected type for filter
+    private val SELECTED_TYPE = "SELECTED_TYPE"
 
     private val TRUE = "TRUE"
     private val FALSE = "FALSE"
@@ -128,6 +142,13 @@ class SettingsHolderImpl @Inject constructor(
         settings.setSettingsItem(wrap(k = SELECTED_CATEGORY, v = category?.toString() ?: (-1).toString()))
     }
 
+    override fun getTypeSelection(): Flow<SelectionType> =
+        settings.getSettingsItemFlow(settingKey = SELECTED_TYPE).map { selectedType ->
+            selectedType?.settingsValue?.let { SelectionType.valueOf(it) } ?: SelectionType.SCREEN_TIME
+        }
+
+    override suspend fun setTypeSelection(selectionType: SelectionType) =
+        settings.setSettingsItem(wrap(k = SELECTED_TYPE, v = selectionType.toString()))
 
 }
 

@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
 import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import com.arjental.taimukka.entities.pierce.timeline.TimelineType
 import com.arjental.taimukka.entities.presentaion.applist.CategoriesSelection
@@ -24,6 +25,7 @@ import com.arjental.taimukka.presentaion.ui.components.buttons.TSelectionButton
 import com.arjental.taimukka.presentaion.ui.images.TIcons
 import com.arjental.taimukka.presentaion.ui.images.ticons.Cross
 import com.arjental.taimukka.presentaion.ui.images.ticons.Follow
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Preview filters for applications screen
@@ -35,7 +37,9 @@ fun TFilters(
     timelineState: State<Timeline?>,
     changeTimeline: (Timeline) -> Unit = { },
     categoriesState: State<CategoriesSelection?>? = null,
-    changeCategory: (Int?) -> Unit = { }
+    changeCategory: (Int?) -> Unit = { },
+    typeState: State<SelectionType?>? = null,
+    changeType: (SelectionType) -> Unit = { },
 ) {
 
     val localDensity = LocalDensity.current
@@ -99,7 +103,7 @@ fun TFilters(
                 }
 
                 val buttonText = categoriesStateV.selectedCategory?.fromCategoryToPreview(LocalContext.current)
-                    //if its null, its not selected
+                //if its null, its not selected
                     ?: stringResource(id = com.arjental.taimukka.R.string.filters_categories_all)
 
                 val iconClickable = categoriesStateV.selectedCategory != null
@@ -115,6 +119,50 @@ fun TFilters(
                     iconClickable = iconClickable,
                     onClickIcon = {
                         changeCategory(null)
+                    }
+                ) {
+                    expanded = true
+                }
+            }
+        }
+
+        if (typeState?.value != null) {
+            val typeStateV = typeState.value!!
+            item(key = "type filter") {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .width(8.dp)
+                )
+                var expanded by remember { mutableStateOf(false) }
+                var buttonHeightDp by remember { mutableStateOf(0.dp) }
+
+                val selectionTypes = remember { getSelectionTypes() }
+
+                TDropdown(
+                    items = selectionTypes,
+                    expanded = expanded,
+                    setExpanded = { expanded = it },
+                    topOffset = buttonHeightDp,
+                ) { tDropdownItem ->
+                    changeType(tDropdownItem.toSelectionType())
+                }
+
+                val buttonText = stringResource(id = typeStateV.toPreview().titleRes!!)
+
+                val iconClickable = typeStateV != SelectionType.SCREEN_TIME
+
+                TSelectionButton(
+                    modifier = Modifier
+                        .onGloballyPositioned { coordinates ->
+                            buttonHeightDp = with(localDensity) { coordinates.size.height.toDp() }
+                        },
+                    text = buttonText,
+                    icon = if (iconClickable) TIcons.Cross else TIcons.Follow,
+                    iconRotated = expanded,
+                    iconClickable = iconClickable,
+                    onClickIcon = {
+                        changeType(SelectionType.SCREEN_TIME)
                     }
                 ) {
                     expanded = true
@@ -171,8 +219,21 @@ private fun Int.fromCategoryToPreview(context: Context): String {
     return ApplicationInfo.getCategoryTitle(context, this)?.toString() ?: ""
 }
 
-fun getTimelines() = TimelineType.values().map { it.toPreviews() }
+private fun getTimelines() = TimelineType.values().map { it.toPreviews() }
 
+/** Process not all selection types, ony required for selection */
+private fun getSelectionTypes() = SelectionType.values()
+    .filter { it.isFilterable }
+    .map { it.toPreview() }
+    .toImmutableList()
 
+private fun SelectionType.toPreview(): TDropdownItem =
+    when (this) {
+        SelectionType.SEANCES -> TDropdownItem(type = SelectionType.SEANCES.name, titleRes = com.arjental.taimukka.R.string.filters_seances)
+        SelectionType.NOTIFICATIONS -> TDropdownItem(type = SelectionType.NOTIFICATIONS.name, titleRes = com.arjental.taimukka.R.string.filters_notifications)
+        SelectionType.SCREEN_TIME -> TDropdownItem(type = SelectionType.SCREEN_TIME.name, titleRes = com.arjental.taimukka.R.string.filters_screen_time)
+    }
+
+private fun TDropdownItem.toSelectionType(): SelectionType = SelectionType.valueOf(this.type)
 
 

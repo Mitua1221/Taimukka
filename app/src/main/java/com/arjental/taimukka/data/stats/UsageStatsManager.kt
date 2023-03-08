@@ -1,7 +1,6 @@
 package com.arjental.taimukka.data.stats
 
 import android.annotation.SuppressLint
-import android.app.AppOpsManager
 import android.app.usage.UsageEvents
 import android.content.Context
 import android.content.pm.ApplicationInfo
@@ -9,11 +8,10 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
 import android.os.Build
-import android.os.Process
 import com.arjental.taimukka.entities.data.user_stats.AppInformation
 import com.arjental.taimukka.entities.data.user_stats.LaunchedApp
+import com.arjental.taimukka.entities.pierce.NOTIFICATION_INTERRUPTION
 import com.arjental.taimukka.other.utils.annotataions.Category
-import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -88,6 +86,9 @@ class UsageStatsManagerImpl @Inject constructor(
         //count screen launches events -> args is package name, activity class name to [UsageEvents]
         val applicationScreenLaunches = mutableMapOf<String, MutableMap<String, UsageEvents.Event>>()
 
+        //count screen launches events -> args is package name, activity class name to [UsageEvents]
+        val applicationLaunches = mutableMapOf<String, MutableMap<String, UsageEvents.Event>>()
+
         while (usageEvents.hasNextEvent()) {
 
             val usageEvent = UsageEvents.Event()
@@ -106,12 +107,23 @@ class UsageStatsManagerImpl @Inject constructor(
                             appInfo = appInfo[previousUsageEvent.packageName]
                         )
                     }
-                } else { //if application screens launched
+                } else { //if application screens launches
                     val packageLaunchesMap = applicationScreenLaunches[usageEvent.packageName] ?: mutableMapOf()
                     packageLaunchesMap[usageEvent.className] = usageEvent
                     applicationScreenLaunches[usageEvent.packageName] = packageLaunchesMap
                 }
             }
+
+            //check notifications
+            if (usageEvent.eventType == NOTIFICATION_INTERRUPTION) {
+                //add notifications event to list
+                notificationInterrupted(
+                    applicationsMap = map,
+                    usageEvent = usageEvent,
+                    appInfo = appInfo[usageEvent.packageName],
+                )
+            }
+
         }
         return map.values.toList()
     }
@@ -127,99 +139,64 @@ class UsageStatsManagerImpl @Inject constructor(
         previousUsageEvent: UsageEvents.Event,
         appInfo: AppInformation?, // if null, thia app is deleted
     ) {
-        val previousUsageEventPackageName = previousUsageEvent.packageName
+        val previousUsageEventPackageName = previousUsageEvent.packageName ?: appInfo?.packageName
 
-        if (map.containsKey(previousUsageEventPackageName)) {
+        if (previousUsageEventPackageName != null) {
+            //check is it is already created
+            map.checkApplicationExists(
+                packageName = previousUsageEventPackageName,
+                appInfo = appInfo
+            )
+            //add new element to it
             map[previousUsageEventPackageName]?.launches?.add(Pair(first = previousUsageEvent.timeStamp, second = usageEventTimeStamp))
-        } else {
-            map[previousUsageEventPackageName] = LaunchedApp(
-                appPackage = previousUsageEventPackageName,
+        }
+    }
+
+    /**
+     * Used to add notification event to map of receiver notification in selected timeline
+     *
+     * @param applicationsMap if [LaunchedApp] not exists in it, we have to create it
+     * @param usageEvent is event
+     * @param appInfo if null, this app is deleted
+     */
+    private suspend inline fun notificationInterrupted(
+        applicationsMap: MutableMap<String, LaunchedApp>,
+        usageEvent: UsageEvents.Event,
+        appInfo: AppInformation?,
+    ) {
+        val packageName = usageEvent.packageName ?: appInfo?.packageName
+
+        if (packageName != null) {
+            //check is it is already created
+            applicationsMap.checkApplicationExists(
+                packageName = packageName,
+                appInfo = appInfo
+            )
+            //add to item, item exists
+            applicationsMap[packageName]?.notifications?.add(usageEvent.timeStamp)
+        }
+    }
+
+    /**
+     * Add [LaunchedApp] to map if it is not exists
+     *
+     * @param packageName
+     * @param appInfo is infromation about app, if its null, app is deleted
+     */
+    private suspend inline fun MutableMap<String, LaunchedApp>.checkApplicationExists(
+        packageName: String,
+        appInfo: AppInformation?
+    ) {
+        if (!this.containsKey(packageName)) {
+            this[packageName] = LaunchedApp(
+                appPackage = packageName,
                 appName = appInfo?.name ?: "-",
-                launches = mutableListOf(Pair(first = previousUsageEvent.timeStamp, second = usageEventTimeStamp)),
+                launches = mutableListOf(),
                 nonSystem = !(appInfo?.isAppSystem ?: true),
-                appCategory = appInfo?.appCategory
+                appCategory = appInfo?.appCategory,
             )
         }
     }
-
-    private fun checkUsageStatsPermission(context: Context): Boolean {
-        val appOpsManager = context.getSystemService(DaggerAppCompatActivity.APP_OPS_SERVICE) as AppOpsManager
-        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            appOpsManager.unsafeCheckOpNoThrow("android:get_usage_stats", Process.myUid(), context.packageName)
-        } else {
-            appOpsManager.checkOpNoThrow("android:get_usage_stats", Process.myUid(), context.packageName)
-        }
-        return mode == AppOpsManager.MODE_ALLOWED
-    }
-
-
-////    @Suppress("DEPRECATION")
-//    fun isSystemApp(packageName: String): Boolean {
-//        return try {
-//            // Get packageinfo for target application
-//            val targetPkgInfo: PackageInfo = context.packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
-//            // Get packageinfo for system package
-//            val sys: PackageInfo = context.packageManager.getPackageInfo("android", PackageManager.GET_SIGNATURES)
-//            // Match both packageinfo for there signatures
-//            targetPkgInfo.signatures != null && (sys.signatures[0] == targetPkgInfo.signatures[0])
-//        } catch (e: NameNotFoundException) {
-//            false
-//        }
-//    }
-
-//    /**
-//     * Parse events of launch/stop apps, launch/stop screen
-//     * @param context additional to [CoroutineScope.coroutineContext] context of the coroutine.
-//     * @param start coroutine start option. The default value is [CoroutineStart.DEFAULT].
-//     */
-//
-//    private suspend fun combineUserEvents(usageEvents: UsageEvents, currentTime: Long, nonSystemAppPackages: Set<String>): CombinedUserEvents {
-//        val map = mutableMapOf<String, LaunchedApp>()
-//        val interactive = mutableListOf<Pair<Int, Long>>()
-//
-//        var previousUsageEvent: UsageEvents.Event? = null
-//
-//        while (usageEvents.hasNextEvent()) {
-//
-//            val usageEvent = UsageEvents.Event()
-//            usageEvents.getNextEvent(usageEvent)
-//
-//            if (usageEvent.eventType == UsageEvents.Event.SCREEN_INTERACTIVE ||
-//                usageEvent.eventType == UsageEvents.Event.SCREEN_NON_INTERACTIVE ||
-//                usageEvent.eventType == UsageEvents.Event.DEVICE_SHUTDOWN
-//            ) {
-//                interactive.add(usageEvent.eventType to usageEvent.timeStamp)
-//            }
-//
-//            if (previousUsageEvent != null) {
-//                combinePreviousUsage(
-//                    usageEventTimeStamp = usageEvent.timeStamp,
-//                    map = map,
-//                    previousUsageEvent = previousUsageEvent,
-//                    nonSystemApp = nonSystemAppPackages.contains(previousUsageEvent.packageName),
-//                    appInfo = appInfo[previousUsageEvent.packageName],
-//                )
-//            }
-//
-//            previousUsageEvent = usageEvent
-//
-//        }
-//
-//        if (previousUsageEvent != null) {
-//            combinePreviousUsage(
-//                usageEventTimeStamp = currentTime,
-//                map = map,
-//                previousUsageEvent = previousUsageEvent,
-//                nonSystemApp = nonSystemAppPackages.contains(previousUsageEvent.packageName),
-//                appInfo = appInfo[previousUsageEvent.packageName]
-//            )
-//        }
-//
-//        return CombinedUserEvents(
-//            launchedAppsMap = map,
-//            screenInteractiveEvents = interactive,
-//        )
-//    }
 
 
 }

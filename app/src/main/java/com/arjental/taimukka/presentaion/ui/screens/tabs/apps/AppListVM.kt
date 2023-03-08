@@ -3,8 +3,10 @@ package com.arjental.taimukka.presentaion.ui.screens.tabs.apps
 import android.content.Context
 import com.arjental.taimukka.domain.uc.ApplicationsStatsUC
 import com.arjental.taimukka.domain.uc.CategorySelectionUC
+import com.arjental.taimukka.domain.uc.SelectionTypeUC
 import com.arjental.taimukka.domain.uc.TimelineUC
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppDomain
+import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
 import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import com.arjental.taimukka.entities.presentaion.applist.AppListItemPres
 import com.arjental.taimukka.entities.presentaion.applist.CategoriesSelection
@@ -30,12 +32,14 @@ class AppListVM @Inject constructor(
     private val context: Context,
     private val dispatchers: TDispatcher,
     private val timelineUC: TimelineUC,
-    categorySelectionUC: Provider<CategorySelectionUC>
+    categorySelectionUC: Provider<CategorySelectionUC>,
+    selectionTypeUC: Provider<SelectionTypeUC>,
 ) : TViewModel<AppListState, AppListEffect>(
     initialState = AppListState(),
     dispatchers = dispatchers,
 ) {
     private val categorySelectionUC by lazy { categorySelectionUC.get()!! }
+    private val selectionTypeUC by lazy { selectionTypeUC.get()!! }
 
     /** Map stores all applications from cache with current timeline to fast search */
     private val applicationsMap = mutableMapOf<String, LaunchedAppDomain>()
@@ -53,6 +57,8 @@ class AppListVM @Inject constructor(
 
     private val _selectedCategoryState = MutableStateFlow<CategoriesSelection?>(null)
 
+    private val _selectedType = MutableStateFlow<SelectionType?>(null)
+
     fun appListState() = _appListState.asStateFlow()
 
     fun appDetailsState() = _appDetailsState.asStateFlow()
@@ -60,6 +66,8 @@ class AppListVM @Inject constructor(
     fun timeline() = _timelineState.asStateFlow()
 
     fun selectedCategory() = _selectedCategoryState.asStateFlow()
+
+    fun selectedType() = _selectedType.asStateFlow()
 
     @OptIn(FlowPreview::class)
     private fun loadApplicationStats() {
@@ -69,28 +77,31 @@ class AppListVM @Inject constructor(
                 _timelineState.emit(timeline)
                 applicationsStatsJob?.cancelAndJoin()
                 applicationsStatsJob = this@AppListVM.launch {
-                    applicationsStatsUC.applicationsStats(timeline = timeline).handleErrors(defaultOnError = emptyList()).collectLatest { res -> //get values from manager
-                        categorySelectionUC.getCategorySelection().collectLatest { categoryType -> //also get category type
-                            res.onDataTransform(
-                                onLoading = { res -> _appListState.update { it.copy(list = res.data ?: persistentListOf(), loading = true, error = null) } },
-                                onSuccess = { res -> _appListState.update { it.copy(list = res.data, loading = false, error = null) } },
-                                onError = { res -> _appListState.update { it.copy(list = res.data ?: persistentListOf(), loading = false, error = createAddError(res.cause)) } },
-                                onDataTransform = {
-                                    //set filters that we can select from
-                                    selectFirstApplication(it ?: emptyList())
-                                    //save to map cache all applications
-                                    saveApplications(it ?: emptyList())
+                    selectionTypeUC.getTypeSelection().collectLatest { selectionType -> // collect selected type
+                        _selectedType.emit(selectionType)
+                        applicationsStatsUC.applicationsStats(timeline = timeline, selectionType = selectionType).handleErrors(defaultOnError = emptyList()).collectLatest { res -> //get values from manager
+                            categorySelectionUC.getCategorySelection().collectLatest { categoryType -> //also get category type
+                                res.onDataTransform(
+                                    onLoading = { res -> _appListState.update { it.copy(list = res.data ?: persistentListOf(), loading = true, error = null) } },
+                                    onSuccess = { res -> _appListState.update { it.copy(list = res.data, loading = false, error = null) } },
+                                    onError = { res -> _appListState.update { it.copy(list = res.data ?: persistentListOf(), loading = false, error = createAddError(res.cause)) } },
+                                    onDataTransform = {
+                                        //set filters that we can select from
+                                        selectFirstApplication(it ?: emptyList())
+                                        //save to map cache all applications
+                                        saveApplications(it ?: emptyList())
 
-                                    _selectedCategoryState.emit(
-                                        CategoriesSelection(
-                                            selectedCategory = categoryType,
-                                            categoriesList = it?.mapNotNull { it.appCategory }?.distinct()?.toImmutableList() ?: persistentListOf()
+                                        _selectedCategoryState.emit(
+                                            CategoriesSelection(
+                                                selectedCategory = categoryType,
+                                                categoriesList = it?.mapNotNull { it.appCategory }?.distinct()?.toImmutableList() ?: persistentListOf()
+                                            )
                                         )
-                                    )
-                                    val presentationList = (it?.toPresentation(context) ?: persistentListOf()).filterWithCategory(categoryType)
-                                    presentationList
-                                }
-                            )
+                                        val presentationList = (it?.toPresentation(context) ?: persistentListOf()).filterWithCategory(categoryType)
+                                        presentationList
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -166,6 +177,12 @@ class AppListVM @Inject constructor(
     fun selectCategory(category: Int?) {
         launch {
             categorySelectionUC.setCategorySelection(category)
+        }
+    }
+
+    fun changeSelectionType(selectionType: SelectionType) {
+        launch {
+            selectionTypeUC.setTypeSelection(selectionType)
         }
     }
 

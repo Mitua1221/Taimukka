@@ -5,14 +5,13 @@ import com.arjental.taimukka.data.cash.holders.UpdateTimesHolder
 import com.arjental.taimukka.data.stats.UsageStatsManager
 import com.arjental.taimukka.entities.data.cash.toDomain
 import com.arjental.taimukka.entities.data.user_stats.toDomain
-import com.arjental.taimukka.entities.domain.stats.LaunchedAppDomain
-import com.arjental.taimukka.entities.domain.stats.LaunchedAppTimeMarkDomain
-import com.arjental.taimukka.entities.domain.stats.toCash
+import com.arjental.taimukka.entities.domain.stats.*
 import com.arjental.taimukka.entities.pierce.SESSION_DEBOUNCE
 import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
 import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import com.arjental.taimukka.entities.pierce.timeline.TimelineType
 import com.arjental.taimukka.entities.pierce.timeline.TimelineTypeMax
+import com.arjental.taimukka.other.utils.dispatchers.TDispatcher
 import com.arjental.taimukka.other.utils.percentage.divideToPercent
 import com.arjental.taimukka.other.utils.resource.Resource
 import com.arjental.taimukka.other.utils.time.TimeUtil
@@ -24,7 +23,15 @@ import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 interface UserStatsRepository {
+
+
+
     suspend fun applicationsStats(timeline: Timeline, selectionType: SelectionType): Flow<Resource<List<LaunchedAppDomain>>>
+
+    /**
+     * Provides to get application stats with all information about application - all timelines and etc
+     */
+    suspend fun applicationStats(timeline: Timeline, appPackage: String): Flow<Resource<LaunchedAppDetailedDomain>>
 
     /**
      * @param manager  holds real timestamp **|from|----|to|** in millis that we have to get from devices, because we dont have this data in cache
@@ -51,7 +58,8 @@ interface UserStatsRepository {
 class UserStatsRepositoryImpl @Inject constructor(
     private val usageStatsManager: UsageStatsManager,
     private val updateTimesHolder: UpdateTimesHolder,
-    private val applicationsStatsHolder: ApplicationsStatsHolder
+    private val applicationsStatsHolder: ApplicationsStatsHolder,
+    private val dispatchers: TDispatcher,
 ) : UserStatsRepository {
 
     //TODO we have to filter it in sql, but idk how to do that
@@ -60,6 +68,117 @@ class UserStatsRepositoryImpl @Inject constructor(
 
     override suspend fun applicationsStats(timeline: Timeline, selectionType: SelectionType): Flow<Resource<List<LaunchedAppDomain>>> = channelFlow {
         send(Resource.loading())
+
+        //count application stats
+        val applicationsStats = wrapApplicationStats(timeline)
+
+        //count percentages and values
+        val elementsWithPercents = when (selectionType) {
+            SelectionType.SCREEN_TIME -> countTimelinesUsageInterest(applicationsStats)
+            SelectionType.NOTIFICATIONS -> countNotifications(applicationsStats)
+            SelectionType.SEANCES -> countSeances(applicationsStats)
+        }.sortedByDescending { it.realQuality }
+
+        //paste
+        send(Resource.success(data = elementsWithPercents))
+    }
+
+    override suspend fun applicationStats(timeline: Timeline, appPackage: String): Flow<Resource<LaunchedAppDetailedDomain>> = channelFlow {
+        send(Resource.loading())
+
+        //count application stats for first time
+        val applicationsStats = wrapApplicationStats(timeline)
+
+        val application = applicationsStats.find { it.appPackage == appPackage } //application that we want to show
+
+        var screenTimePercentage: Float = 0f
+        var screenTimeMillis: Long = 0L
+
+        var notificationsPercentage: Float = 0f
+        var notificationsQuality = 0
+
+        var seancesQuality = 0
+        var seancesPercentage: Float = 0f
+
+        //here we can to count percentages
+        SelectionType.values().map {
+            async {
+                when (it) {
+                    SelectionType.SCREEN_TIME -> { // count screen time and send percentage
+                        countTimelinesUsageInterest(applicationsStats)
+                            .find { it.appPackage == appPackage }
+                            ?.let {
+                                screenTimePercentage = it.percentage
+                                screenTimeMillis = it.realQuality
+                            }
+                    }
+                    SelectionType.NOTIFICATIONS -> { // count notifications quality and percentage
+                        countNotifications(applicationsStats)
+                            .find { it.appPackage == appPackage }
+                            ?.let {
+                                notificationsQuality = it.notificationsMarks.size
+                                notificationsPercentage = it.percentage
+                            }
+                    }
+                    SelectionType.SEANCES -> { // count seances and percentage
+                        countSeances(applicationsStats)
+                            .find { it.appPackage == appPackage }
+                            ?.let {
+                                seancesQuality = it.launches.size
+                                seancesPercentage = it.percentage
+                            }
+                    }
+                }
+            }
+        }.awaitAll()
+
+        val detailedApplication = application?.toDetailed(
+            screenTimePercentage = screenTimePercentage,
+            notificationsPercentage = notificationsPercentage,
+            seancesPercentage = seancesPercentage,
+            notificationsQuality = notificationsQuality,
+            seancesQuality = seancesQuality,
+            screenTimeMillis = screenTimeMillis,
+        )
+
+
+        //here we can to start fetch different (decreased by one timeline)
+
+//        TimeUtil.decreaseFromTime()
+//        val applicationsStatsWithDecreasedTimeline = async { wrapApplicationStats() }
+
+        //here we can send it to presentation, but without difference
+
+
+//        //create timeline
+//        val cacheTimeline = when (timeline.timelineType) {
+//            TimelineType.CUSTOM -> TODO()
+//            else -> UserStatsRepository.Select(
+//                from = TimeUtil.getPreviousTimeFromTimelineType(timelineType = timeline.timelineType),
+//                to = TimeUtil.getCurrentTimeMillis()
+//            )
+//        }
+//
+//        //get timeline part from cache, always only from cache
+//        val cashedStats =
+//            applicationsStatsHolder.getApplication(from = cacheTimeline.from, to = cacheTimeline.to, appPackage = appPackage)?.toDomain()
+
+        detailedApplication?.let {
+            send(Resource.success(data = detailedApplication))
+        } ?: kotlin.run {
+            send(Resource.error(cause = IllegalStateException("there is no application with this package name"), data = null))
+        }
+    }
+
+
+    /**
+     * Wrapper of getting applications statistic to different sources
+     *
+     * **!!! Dont call it concurrent**
+     *
+     * @param timeline
+     */
+    private suspend fun wrapApplicationStats(timeline: Timeline) = coroutineScope {
         //Get cache updated times
         val cacheUpdateTimes = updateTimesHolder.getAppCacheTimestamps()
 
@@ -89,16 +208,16 @@ class UserStatsRepositoryImpl @Inject constructor(
         }
 
         //immediate save changes to cache, it mustn't be cancellable
-        if (managerStats.await() != null && lastUpdateAppsTime.manager != null) {
-            launch(SupervisorJob()) {
-                launch {
+        val caching = if (managerStats.await() != null && lastUpdateAppsTime.manager != null) {
+            listOf(
+                async(SupervisorJob() + dispatchers.io + NonCancellable) {
                     applicationsStatsHolder.setApplications(applicationsList = managerStats.await()!!.toCash())
-                }
-                launch {
+                },
+                async(SupervisorJob() + dispatchers.io + NonCancellable) {
                     updateTimesHolder.updatedAppList(from = lastUpdateAppsTime.manager.from, lastUpdateAppsTime.manager.to)
                 }
-            }
-        }
+            )
+        } else null
 
         //merge
         val mergedElements = when {
@@ -107,15 +226,13 @@ class UserStatsRepositoryImpl @Inject constructor(
             managerStats.await() == null -> cashedStats.await()!!
             else -> merge(cash = cashedStats.await()!!, stats = managerStats.await()!!.associateBy { it.appPackage }.toMutableMap())
         }
-        //count percentages and values
-        val elementsWithPercents = when (selectionType) {
-            SelectionType.SCREEN_TIME -> countTimelinesUsageInterest(mergedElements)
-            SelectionType.NOTIFICATIONS -> countNotifications(mergedElements)
-            SelectionType.SEANCES -> countSeances(mergedElements)
-        }.sortedByDescending { it.realQuality }
-        //paste
-        send(Resource.success(data = elementsWithPercents))
+
+        //wait when all cashing operations will finish
+        caching?.forEach { it.await() }
+
+        return@coroutineScope mergedElements
     }
+
 
     /**
      * Combine cache information and recently information usages from device manager
@@ -225,7 +342,7 @@ class UserStatsRepositoryImpl @Inject constructor(
             it.await()
         }.map {
             val percentage = it.second.divideToPercent(allApplicationRuntimeInMillis)
-            it.first.copy(percentage = percentage, realQuality = it.second, )
+            it.first.copy(percentage = percentage, realQuality = it.second, selectionType = SelectionType.SCREEN_TIME)
         }.sortedByDescending { it.realQuality }
     }
 
@@ -265,7 +382,7 @@ class UserStatsRepositoryImpl @Inject constructor(
             it.await()
         }.map {
             val percentage = it.second.divideToPercent(allApplicationsLaunchQuality)
-            it.first.copy(percentage = percentage, realQuality = it.second.toLong(), )
+            it.first.copy(percentage = percentage, realQuality = it.second.toLong(), selectionType = SelectionType.SEANCES )
         }
     }
 
@@ -280,7 +397,7 @@ class UserStatsRepositoryImpl @Inject constructor(
             it to notificationsSize
         }.map {
             val percentage = it.second.divideToPercent(allApplicationsNotifications)
-            it.first.copy(percentage = percentage, realQuality = it.second.toLong(), )
+            it.first.copy(percentage = percentage, realQuality = it.second.toLong(), selectionType = SelectionType.NOTIFICATIONS)
         }
     }
 

@@ -16,6 +16,11 @@ interface ApplicationsStatsHolder {
      * Return only selected interval
      */
     suspend fun getApplications(from: Long, to: Long): List<ApplicationStatsCash>
+
+    /**
+     * Return only selected application in selected interval
+     */
+    suspend fun getApplication(from: Long, to: Long, appPackage: String): ApplicationStatsCash?
     suspend fun setApplications(applicationsList: List<ApplicationStatsCash>)
     suspend fun clearApplicationsList()
 }
@@ -27,15 +32,13 @@ class ApplicationsStatsHolderImpl @Inject constructor(
     private val applicationsStats = database.applicationsStats()
 
     override suspend fun getApplications() = applicationsStats.getApplications()
-    override suspend fun getApplications(from: Long, to: Long): List<ApplicationStatsCash> = applicationsStats.getApplications().map { appStatsCache ->
-        appStatsCache.copy(
-            //here we filtering result to match given from-to
-            foregroundMarks = appStatsCache.foregroundMarks.filter {
-                it.from >= from && it.to <= to
-            },
-            //here we filtering result to match given from-to
-            notificationsMarks = appStatsCache.notificationsMarks.filter { it.time in from..to })
-    }
+    override suspend fun getApplications(from: Long, to: Long): List<ApplicationStatsCash> =
+        applicationsStats.getApplications().map { appStatsCache ->
+            appStatsCache.filterCashedAppFields(from = from, to = to)
+        }
+
+    override suspend fun getApplication(from: Long, to: Long, appPackage: String): ApplicationStatsCash? =
+        applicationsStats.getApplication(appPackage = appPackage)?.filterCashedAppFields(from = from, to = to)
 
     override suspend fun setApplications(applicationsList: List<ApplicationStatsCash>) = coroutineScope {
         applicationsList.map {
@@ -48,5 +51,18 @@ class ApplicationsStatsHolderImpl @Inject constructor(
     }
 
     override suspend fun clearApplicationsList() = applicationsStats.clear()
+
+
+    /** Uses only standart filter for all fuctions.
+     *  Helps to filter all fields from---to
+     */
+    private fun ApplicationStatsCash.filterCashedAppFields(from: Long, to: Long) = this.copy(
+        //here we filtering result to match given from-to
+        foregroundMarks = this.foregroundMarks.filter {
+            it.from >= from && it.to <= to
+        },
+        //here we filtering result to match given from-to
+        notificationsMarks = this.notificationsMarks.filter { it.time in from..to }
+    )
 
 }

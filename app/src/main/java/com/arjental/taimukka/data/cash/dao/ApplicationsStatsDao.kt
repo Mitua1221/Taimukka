@@ -1,10 +1,10 @@
 package com.arjental.taimukka.data.cash.dao
 
 import androidx.room.*
-import com.arjental.taimukka.entities.data.cash.ApplicationInfoCash
-import com.arjental.taimukka.entities.data.cash.ApplicationStatsCash
 import com.arjental.taimukka.entities.data.cash.ApplicationForegroundMarksCash
+import com.arjental.taimukka.entities.data.cash.ApplicationInfoCash
 import com.arjental.taimukka.entities.data.cash.ApplicationNotificationsMarksCash
+import com.arjental.taimukka.entities.data.cash.ApplicationStatsCash
 
 @Dao
 interface ApplicationsStatsDao {
@@ -38,6 +38,9 @@ interface ApplicationsStatsDao {
     @Query("DELETE FROM applications_info")
     suspend fun clear()
 
+    @Query("SELECT * FROM applications_info WHERE app_package = :appPackage")
+    suspend fun getApplication(appPackage: String): ApplicationStatsCash?
+
 //    @Update
 //    suspend fun updateCashedUser(user: CashedUserEntity)
 //
@@ -47,8 +50,7 @@ interface ApplicationsStatsDao {
 //    @Query("SELECT * FROM cashed_user_entity WHERE is_user_deleted != 1")
 //    fun subscribeOnCashedUsers(): LiveData<List<CashedUserEntity>>
 //
-//    @Query("SELECT * FROM cashed_user_entity WHERE is_user_deleted != 1")
-//    fun getCashedUsersList(): List<CashedUserEntity>
+
 //
 //    @Query("SELECT * FROM cashed_user_entity WHERE is_active = 1")
 //    suspend fun getCurrentCashedUser(): CashedUserEntity?

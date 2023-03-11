@@ -17,7 +17,7 @@ data class AdditionalError(
     val message: String? = null,
 ): java.io.Serializable
 
-public suspend fun createAddError(t: Throwable): AdditionalError {
+public fun createAddError(t: Throwable): AdditionalError {
     return AdditionalError(
         message = t.localizedMessage
     )

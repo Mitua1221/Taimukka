@@ -4,12 +4,13 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -28,7 +29,7 @@ import com.arjental.taimukka.presentaion.ui.images.ticons.Follow
 import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Preview filters for applications screen
+ * Preview filters for applications screen, contains all filters
  */
 
 @Composable
@@ -36,9 +37,9 @@ fun TFilters(
     modifier: Modifier = Modifier,
     timelineState: State<Timeline?>,
     changeTimeline: (Timeline) -> Unit = { },
-    categoriesState: State<CategoriesSelection?>? = null,
+    categoriesState: State<CategoriesSelection?>,
     changeCategory: (Int?) -> Unit = { },
-    typeState: State<SelectionType?>? = null,
+    typeState: State<SelectionType?>,
     changeType: (SelectionType) -> Unit = { },
 ) {
 
@@ -48,41 +49,12 @@ fun TFilters(
 
         if (timelineState.value != null) {
             item(key = "timeline filter") {
-                Spacer(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .width(16.dp)
-                )
-                var expanded by remember { mutableStateOf(false) }
-                var buttonHeightDp by remember { mutableStateOf(0.dp) }
-                val dropdownItems = remember { getTimelines() }
-                TDropdown(
-                    items = dropdownItems,
-                    expanded = expanded,
-                    setExpanded = { expanded = it },
-                    topOffset = buttonHeightDp,
-                ) { tDropdownItem ->
-                    changeTimeline(tDropdownItem.toTimeline())
-                }
-                TSelectionButton(
-                    modifier = Modifier
-                        .onGloballyPositioned { coordinates ->
-                            buttonHeightDp = with(localDensity) { coordinates.size.height.toDp() }
-                        },
-                    //first get from res
-                    text = timelineState.value!!.timelineType.toPreviews().titleRes?.let { stringResource(id = it) }
-                    //after that from string title
-                        ?: timelineState.value!!.timelineType.toPreviews().title ?: "",
-                    icon = TIcons.Follow,
-                    iconRotated = expanded,
-                ) {
-                    expanded = true
-                }
+                TimelineFilter(changeTimeline = changeTimeline, timeline = timelineState.value!!) //npe not plausible
             }
         }
 
         //remember, we cant provide categories on api < 28
-        if (categoriesState?.value != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (categoriesState.value != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             val categoriesStateV = categoriesState.value!!
             item(key = "category filter") {
                 Spacer(
@@ -126,50 +98,121 @@ fun TFilters(
             }
         }
 
-        if (typeState?.value != null) {
-            val typeStateV = typeState.value!!
+        if (typeState.value != null) {
             item(key = "type filter") {
-                Spacer(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .width(8.dp)
-                )
-                var expanded by remember { mutableStateOf(false) }
-                var buttonHeightDp by remember { mutableStateOf(0.dp) }
-
-                val selectionTypes = remember { getSelectionTypes() }
-
-                TDropdown(
-                    items = selectionTypes,
-                    expanded = expanded,
-                    setExpanded = { expanded = it },
-                    topOffset = buttonHeightDp,
-                ) { tDropdownItem ->
-                    changeType(tDropdownItem.toSelectionType())
-                }
-
-                val buttonText = stringResource(id = typeStateV.toPreview().titleRes!!)
-
-                val iconClickable = typeStateV != SelectionType.SCREEN_TIME
-
-                TSelectionButton(
-                    modifier = Modifier
-                        .onGloballyPositioned { coordinates ->
-                            buttonHeightDp = with(localDensity) { coordinates.size.height.toDp() }
-                        },
-                    text = buttonText,
-                    icon = if (iconClickable) TIcons.Cross else TIcons.Follow,
-                    iconRotated = expanded,
-                    iconClickable = iconClickable,
-                    onClickIcon = {
-                        changeType(SelectionType.SCREEN_TIME)
-                    }
-                ) {
-                    expanded = true
-                }
+                TypeFilter(type = typeState.value!!, changeType = changeType) // npe not plausible
             }
         }
 
+    }
+}
+
+/**
+ * Preview filters for application details screen
+ */
+
+@Composable
+fun TDetailsFilters(
+    modifier: Modifier = Modifier,
+    timelineState: State<Timeline?>,
+    changeTimeline: (Timeline) -> Unit = { },
+    typeState: State<SelectionType?>,
+    changeType: (SelectionType) -> Unit = { },
+) {
+    LazyRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        if (timelineState.value != null) {
+            item (key = "TimelineFilter") {
+                TimelineFilter(changeTimeline = changeTimeline, timeline = timelineState.value!!)
+            }
+        }
+        if (typeState.value != null) {
+            item (key = "TypeFilter") {
+                TypeFilter(type = typeState.value!!, changeType = changeType)
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun TimelineFilter(changeTimeline: (Timeline) -> Unit, timeline: Timeline) {
+    val localDensity = LocalDensity.current
+    Spacer(
+        modifier = Modifier
+            .fillMaxSize()
+            .width(16.dp)
+    )
+    var expanded by remember { mutableStateOf(false) }
+    var buttonHeightDp by remember { mutableStateOf(0.dp) }
+    val dropdownItems = remember { getTimelines() }
+    TDropdown(
+        items = dropdownItems,
+        expanded = expanded,
+        setExpanded = { expanded = it },
+        topOffset = buttonHeightDp,
+    ) { tDropdownItem ->
+        changeTimeline(tDropdownItem.toTimeline())
+    }
+    TSelectionButton(
+        modifier = Modifier
+            .onGloballyPositioned { coordinates ->
+                buttonHeightDp = with(localDensity) { coordinates.size.height.toDp() }
+            },
+        //first get from res
+        text = timeline.timelineType.toPreviews().titleRes?.let { stringResource(id = it) }
+        //after that from string title
+            ?: timeline.timelineType.toPreviews().title ?: "",
+        icon = TIcons.Follow,
+        iconRotated = expanded,
+    ) {
+        expanded = true
+    }
+}
+
+@Composable
+private fun TypeFilter(type: SelectionType, changeType: (SelectionType) -> Unit) {
+    Spacer(
+        modifier = Modifier
+            .fillMaxSize()
+            .width(8.dp)
+    )
+    var expanded by remember { mutableStateOf(false) }
+    var buttonHeightDp by remember { mutableStateOf(0.dp) }
+
+    val selectionTypes = remember { getSelectionTypes() }
+
+    TDropdown(
+        items = selectionTypes,
+        expanded = expanded,
+        setExpanded = { expanded = it },
+        topOffset = buttonHeightDp,
+    ) { tDropdownItem ->
+        changeType(tDropdownItem.toSelectionType())
+    }
+
+    val buttonText = stringResource(id = type.toPreview().titleRes!!)
+
+    val iconClickable = type != SelectionType.SCREEN_TIME
+
+    val localDensity = LocalDensity.current
+
+    TSelectionButton(
+        modifier = Modifier
+            .onGloballyPositioned { coordinates ->
+                buttonHeightDp = with(localDensity) { coordinates.size.height.toDp() }
+            },
+        text = buttonText,
+        icon = if (iconClickable) TIcons.Cross else TIcons.Follow,
+        iconRotated = expanded,
+        iconClickable = iconClickable,
+        onClickIcon = {
+            changeType(SelectionType.SCREEN_TIME)
+        }
+    ) {
+        expanded = true
     }
 }
 

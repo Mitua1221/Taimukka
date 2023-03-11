@@ -1,5 +1,6 @@
 package com.arjental.taimukka.presentaion.ui.screens.tabs.apps.screen_parts
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
@@ -106,7 +108,7 @@ fun AppList(screenState: State<ApplicationsListState>) {
 @Composable
 fun Foo() {
     AppListItem(
-        item = AppListItemPres(title = "Tinkoff", packageName = "com.tinkoff.bank", appIcon = null, nonSystem = true, appCategory = 0),
+        item = AppListItemPres(title = "Tinkoff", packageName = "com.tinkoff.bank", appIcon = null, nonSystem = true, appCategory = 1, realQuality = 1000000000, selectionType = SelectionType.NOTIFICATIONS),
         category = "somecategory",
         onClick = {  }
     )
@@ -131,7 +133,7 @@ fun AppListItem(
                 .fillMaxWidth()
                 .padding(start = startP, end = endP)
         ) {
-            val (appLogo, appCategory, appTitle, appBar, appTime, follow) = createRefs()
+            val (appLogo, appCategory, appTitle, appBar, appValuable, follow) = createRefs()
 
             if (item.appIcon != null) {
                 Image(
@@ -139,8 +141,8 @@ fun AppListItem(
                         .height(48.dp)
                         .width(48.dp)
                         .constrainAs(appLogo) {
-                            top.linkTo(parent.top)
-                            bottom.linkTo(parent.bottom)
+                            top.linkTo(parent.top, margin = 8.dp)
+                            bottom.linkTo(parent.bottom, margin = 8.dp)
                             start.linkTo(parent.start, margin = 16.dp)
                         },
                     bitmap = item.appIcon,
@@ -152,8 +154,8 @@ fun AppListItem(
                         .height(48.dp)
                         .width(48.dp)
                         .constrainAs(appLogo) {
-                            top.linkTo(parent.top)
-                            bottom.linkTo(parent.bottom)
+                            top.linkTo(parent.top, margin = 8.dp)
+                            bottom.linkTo(parent.bottom, margin = 8.dp)
                             start.linkTo(parent.start, margin = 16.dp)
                         },
                     imageVector = TIcons.Control,
@@ -168,7 +170,7 @@ fun AppListItem(
                         .constrainAs(appCategory) {
                             top.linkTo(parent.top, margin = 8.dp)
                             start.linkTo(appLogo.end, margin = 16.dp)
-                            end.linkTo(follow.start, margin = 16.dp)
+                            end.linkTo(follow.start, margin = 28.dp)
                             width = Dimension.fillToConstraints
 
                         },
@@ -186,7 +188,7 @@ fun AppListItem(
                         else
                             top.linkTo(parent.top, margin = 8.dp)
                         start.linkTo(appLogo.end, margin = 16.dp)
-                        end.linkTo(follow.start, margin = 16.dp)
+                        end.linkTo(appValuable.start, margin = 4.dp)
                         width = Dimension.fillToConstraints
                     },
                 text = item.title,
@@ -194,15 +196,13 @@ fun AppListItem(
                 color = MaterialTheme.colorScheme.onSurface,
             )
 
-            val startGuideline = createGuidelineFromStart(0.64f)
-
             LinearProgressIndicator(
                 progress = item.percentage,
                 modifier = Modifier.constrainAs(appBar) {
-                    top.linkTo(appTitle.bottom, margin = 12.dp)
+                    top.linkTo(appTitle.bottom, margin = 4.dp)
                     start.linkTo(appLogo.end, margin = 16.dp)
-                    end.linkTo(startGuideline, margin = 16.dp)
-                    bottom.linkTo(parent.bottom, margin = 20.dp)
+                    end.linkTo(follow.start, margin = 28.dp)
+                    bottom.linkTo(parent.bottom, margin = 12.dp)
                     width = Dimension.fillToConstraints
                 },
                 color = MaterialTheme.colorScheme.primary,
@@ -210,26 +210,23 @@ fun AppListItem(
             )
 
 
-            val appTimeText = remember {
-                when (item.selectionType) {
-                    SelectionType.SCREEN_TIME -> formatMillisToPresentation(context, item.realQuality)
-                    else -> error("SelectionType not handled on ui")
-                }
+            val appValuableText = remember {
+                formatSelectionTypeValue(context = context, selectionType = item.selectionType, quality = item.realQuality)
             }
 
-            Text(
-                modifier = Modifier
-                    .constrainAs(appTime) {
-                        top.linkTo(appBar.top)
-                        start.linkTo(appBar.end, margin = 10.dp)
-                        end.linkTo(follow.start, margin = 16.dp)
-                        bottom.linkTo(appBar.bottom)
-                        width = Dimension.fillToConstraints
-                    },
-                text = appTimeText,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Box(modifier = Modifier
+                .constrainAs(appValuable) {
+                    end.linkTo(follow.start, margin = 28.dp)
+                    bottom.linkTo(appTitle.bottom)
+                    width = Dimension.fillToConstraints
+                }) {
+                Text(
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    text = appValuableText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
 
             Image(
                 modifier = Modifier
@@ -250,6 +247,18 @@ fun AppListItem(
                 .padding(start = startP, end = endP)
                 .background(color = MaterialTheme.colorScheme.outlineVariant)
         )
+    }
+}
+
+/**
+ * Formatting typed value to presentation string
+ */
+fun formatSelectionTypeValue(selectionType: SelectionType, context: Context, quality: Long): String {
+    return when (selectionType) {
+        SelectionType.SCREEN_TIME -> formatMillisToPresentation(context, quality)
+        SelectionType.SEANCES -> quality.toString()
+        SelectionType.NOTIFICATIONS -> quality.toString()
+        else -> error("SelectionType not handled on ui")
     }
 }
 

@@ -28,18 +28,20 @@ import javax.inject.Inject
 import javax.inject.Provider
 
 class AppListVM @Inject constructor(
-    private val applicationsStatsUC: ApplicationsStatsUC,
     private val context: Context,
     private val dispatchers: TDispatcher,
-    private val timelineUC: TimelineUC,
+    applicationsStatsUC: Provider<ApplicationsStatsUC>,
+    timelineUC: Provider<TimelineUC>,
     categorySelectionUC: Provider<CategorySelectionUC>,
     selectionTypeUC: Provider<SelectionTypeUC>,
 ) : TViewModel<AppListState, AppListEffect>(
     initialState = AppListState(),
     dispatchers = dispatchers,
 ) {
+    private val timelineUC by lazy { timelineUC.get()!! }
     private val categorySelectionUC by lazy { categorySelectionUC.get()!! }
     private val selectionTypeUC by lazy { selectionTypeUC.get()!! }
+    private val applicationsStatsUC by lazy { applicationsStatsUC.get()!! }
 
     /** Map stores all applications from cache with current timeline to fast search */
     private val applicationsMap = mutableMapOf<String, LaunchedAppDomain>()
@@ -48,9 +50,10 @@ class AppListVM @Inject constructor(
         loadApplicationStats()
     }
 
-    private val _appDetailsState = MutableStateFlow(ApplicationDetailsState())
+    /** Object of application that currently selected on screen */
+    private val _openedAppState = MutableStateFlow<AppListItemPres?>(null)
 
-    /** Locker of [selectFirstApplication] */
+    /** Locker of [preselectFirstApplication] */
     private val appFirstTimeSelection = AtomicBoolean(false)
 
     private val _timelineState = MutableStateFlow<Timeline?>(null)
@@ -59,9 +62,30 @@ class AppListVM @Inject constructor(
 
     private val _selectedType = MutableStateFlow<SelectionType?>(null)
 
-    fun appListState() = _appListState.asStateFlow()
+    init {
+        addApplicationDetailsToStack()
+    }
 
-    fun appDetailsState() = _appDetailsState.asStateFlow()
+    /**
+     * Creates right element [ApplicationDetailsPart] with details of application, provide communication object
+     * Deletes [LoadingPart] from right stack
+     */
+    private fun addApplicationDetailsToStack() {
+        launch {
+            val flow = _openedAppState.map { openedApp -> openedApp?.packageName }.stateIn(this@launch)
+            modifyState {
+                it.copy(
+                    right = (listOf(
+                        ApplicationDetailsPart(
+                            openedApplication = flow
+                        )
+                    )).toImmutableList()
+                )
+            }
+        }
+    }
+
+    fun appListState() = _appListState.asStateFlow()
 
     fun timeline() = _timelineState.asStateFlow()
 
@@ -86,8 +110,6 @@ class AppListVM @Inject constructor(
                                     onSuccess = { res -> _appListState.update { it.copy(list = res.data, loading = false, error = null) } },
                                     onError = { res -> _appListState.update { it.copy(list = res.data ?: persistentListOf(), loading = false, error = createAddError(res.cause)) } },
                                     onDataTransform = {
-                                        //set filters that we can select from
-                                        selectFirstApplication(it ?: emptyList())
                                         //save to map cache all applications
                                         saveApplications(it ?: emptyList())
 
@@ -98,6 +120,9 @@ class AppListVM @Inject constructor(
                                             )
                                         )
                                         val presentationList = (it?.toPresentation(context) ?: persistentListOf()).filterWithCategory(categoryType)
+
+                                        preselectFirstApplication(presentationList ?: emptyList())
+
                                         presentationList
                                     }
                                 )
@@ -112,10 +137,10 @@ class AppListVM @Inject constructor(
     /**
      * Selects first element from list, if flag [appFirstTimeSelection] is false
      */
-    private suspend fun selectFirstApplication(launchedAppDomains: List<LaunchedAppDomain>) = coroutineScope {
+    private suspend fun preselectFirstApplication(presentationList: List<AppListItemPres>) = coroutineScope {
         this.launch {
-            if (launchedAppDomains.isNotEmpty() && appFirstTimeSelection.compareAndSet(false, true)) {
-                modifyAppDetailsState(launchedAppDomain = launchedAppDomains.first(), onElevated = false)
+            if (presentationList.isNotEmpty() && appFirstTimeSelection.compareAndSet(false, true)) {
+                modifyAppDetailsState(selectedApplication = presentationList.first(), onElevated = false)
             }
         }
     }
@@ -132,39 +157,31 @@ class AppListVM @Inject constructor(
     }
 
     /**
-     * Get application from local [applicationsMap] and set it to state of second screen.
+     * Get application selected from UI
      * This method provides by custom selection on application item, so when modify state screen onElevated.
      */
     fun selectApplication(application: AppListItemPres) {
         launch {
-            applicationsMap[application.packageName]?.let {
-                modifyAppDetailsState(launchedAppDomain = it, onElevated = true)
-            }
+            modifyAppDetailsState(selectedApplication = application, onElevated = true)
         }
     }
 
     /**
      * Used to modify [_appDetailsState] from all places.
-     * @param launchedAppDomain
+     * @param selectedApplication
      * @param onElevated if user selected element by himself
      */
-    private suspend fun modifyAppDetailsState(launchedAppDomain: LaunchedAppDomain, onElevated: Boolean) = coroutineScope {
-        //show state on new screen
+    private suspend fun modifyAppDetailsState(selectedApplication: AppListItemPres, onElevated: Boolean) = coroutineScope {
+        //change state of opened application
         launch {
-            _appDetailsState.update {
-                launchedAppDomain.let { launchedApp ->
-                    it.copy(
-                        appName = launchedApp.appName,
-                        appPackage = launchedApp.appPackage,
-                        loading = false,
-                    )
-                }
-            }
+            _openedAppState.emit(selectedApplication)
         }
         //only if we need elevate it, we shows that
         if (onElevated)
             launch {
-                wNav(vm = this@AppListVM, changeScreen = stateValue().right.first { it is ApplicationDetailsPart })
+                stateValue().right.firstOrNull { it is ApplicationDetailsPart }?.let { changeScreen -> //protected bu null, but in real life it cant be null
+                    wNav(vm = this@AppListVM, changeScreen = changeScreen)
+                }
             }
     }
 

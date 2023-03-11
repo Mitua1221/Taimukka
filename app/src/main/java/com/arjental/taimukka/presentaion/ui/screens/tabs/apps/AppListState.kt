@@ -2,8 +2,11 @@ package com.arjental.taimukka.presentaion.ui.screens.tabs.apps
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.ImageBitmap
 import com.arjental.taimukka.R
+import com.arjental.taimukka.entities.presentaion.app_details.AppDetailedPresentation
 import com.arjental.taimukka.entities.presentaion.applist.AppListItemPres
+import com.arjental.taimukka.presentaion.ui.components.loading.LoadingPart
 import com.arjental.taimukka.presentaion.ui.components.uiutils.AdditionalError
 import com.arjental.taimukka.presentaion.ui.components.uiutils.AdditionalScreens
 import com.arjental.taimukka.presentaion.ui.components.uiutils.DividedScreens
@@ -22,7 +25,7 @@ data class AppListState(
         ApplicationsListPart(),
     ),
     override val right: ImmutableList<ScreenPart> = persistentListOf(
-        ApplicationDetailsPart(),
+        LoadingPart()
     ),
     override val full: ImmutableList<ScreenPart> = persistentListOf(),
 ) : DividedScreens {
@@ -45,8 +48,8 @@ data class ApplicationsListState(
 @Immutable
 @kotlinx.serialization.Serializable
 data class ApplicationDetailsState(
-    val appName: String = "",
-    val appPackage: String = "",
+    val appPresentationInformation: AppDetailedPresentation? = null,
     override val loading: Boolean = true,
     override val error: AdditionalError? = null,
 ) : AdditionalScreens(), java.io.Serializable
+

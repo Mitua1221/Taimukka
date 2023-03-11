@@ -18,23 +18,27 @@ data class AppListItemPres(
     @Category val appCategory: Int?,
     val percentage: Float = 0f,
     val realQuality: Long = 0,
-    val selectionType: SelectionType = SelectionType.SCREEN_TIME
+    val selectionType: SelectionType
 ): java.io.Serializable
 
 suspend fun List<LaunchedAppDomain>.toPresentation(context: Context): ImmutableList<AppListItemPres> {
     return this.map {
-        AppListItemPres(
-            title = it.appName,
-            packageName = it.appPackage,
-            appIcon = context.loadPackageIcon(it.appPackage),
-            nonSystem = it.nonSystem,
-            appCategory = it.appCategory,
-            percentage = it.percentage,
-            realQuality = it.realQuality,
-            selectionType = it.selectionType,
-        )
+        it.toPresentation(context)
     }.toImmutableList()
 }
+
+suspend fun LaunchedAppDomain.toPresentation(context: Context) =
+    AppListItemPres(
+        title = this.appName,
+        packageName = this.appPackage,
+        appIcon = context.loadPackageIcon(this.appPackage),
+        nonSystem = this.nonSystem,
+        appCategory = this.appCategory,
+        percentage = this.percentage,
+        realQuality = this.realQuality,
+        selectionType = this.selectionType,
+    )
+
 
 /**
  * Filter list to show only values with category

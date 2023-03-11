@@ -16,7 +16,7 @@ class TaimukkaViewModelFactory @Inject constructor(
         try {
             return viewModels[modelClass]?.get() as T
         } catch (e: NullPointerException) {
-            throw IllegalStateException("You forget to add !! ${modelClass.javaClass.canonicalName} !! to Dagger graph")
+            throw IllegalStateException("You forget to add !! ${modelClass.canonicalName} !! to Dagger graph")
         }
     }
 

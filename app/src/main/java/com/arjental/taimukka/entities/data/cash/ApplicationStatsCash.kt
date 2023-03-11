@@ -44,21 +44,23 @@ class ApplicationNotificationsMarksCash(
 )
 
 suspend fun List<ApplicationStatsCash>.toDomain() = this.map {
-    LaunchedAppDomain(
-        appPackage = it.appInfo.appPackage,
-        appName = it.appInfo.appName,
-        nonSystem = it.appInfo.nonSystem,
-        launches = it.foregroundMarks.map { timeMark ->
-            LaunchedAppTimeMarkDomain(
-                from = timeMark.from,
-                to = timeMark.to
-            )
-        },
-        appCategory = it.appInfo.appCategory,
-        notificationsMarks = it.notificationsMarks.map {
-            NotificationsReceivedDomain(
-                time = it.time
-            )
-        }
-    )
+    it.toDomain()
 }
+
+suspend inline fun ApplicationStatsCash.toDomain() =  LaunchedAppDomain(
+    appPackage = this.appInfo.appPackage,
+    appName = this.appInfo.appName,
+    nonSystem = this.appInfo.nonSystem,
+    launches = this.foregroundMarks.map { timeMark ->
+        LaunchedAppTimeMarkDomain(
+            from = timeMark.from,
+            to = timeMark.to
+        )
+    },
+    appCategory = this.appInfo.appCategory,
+    notificationsMarks = this.notificationsMarks.map {
+        NotificationsReceivedDomain(
+            time = it.time
+        )
+    }
+)

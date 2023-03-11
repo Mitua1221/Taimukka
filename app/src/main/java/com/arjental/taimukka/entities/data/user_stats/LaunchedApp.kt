@@ -20,20 +20,22 @@ class LaunchedApp(
 
 suspend fun List<LaunchedApp>.toDomain(): List<LaunchedAppDomain> {
     return this.map { app ->
-        LaunchedAppDomain(
-            appPackage = app.appPackage,
-            appName = app.appName,
-            nonSystem = app.nonSystem,
-            appCategory = app.appCategory,
-            launches = app.launches.map {
-                LaunchedAppTimeMarkDomain(
-                    from = it.first,
-                    to = it.second
-                )
-            },
-            notificationsMarks = app.notifications.map {
-                NotificationsReceivedDomain(time = it)
-            }
-        )
+        app.toDomain()
     }
 }
+
+suspend inline fun LaunchedApp.toDomain() = LaunchedAppDomain(
+    appPackage = this.appPackage,
+    appName = this.appName,
+    nonSystem = this.nonSystem,
+    appCategory = this.appCategory,
+    launches = this.launches.map {
+        LaunchedAppTimeMarkDomain(
+            from = it.first,
+            to = it.second
+        )
+    },
+    notificationsMarks = this.notifications.map {
+        NotificationsReceivedDomain(time = it)
+    }
+)

@@ -2,9 +2,9 @@ package com.arjental.taimukka.presentaion.ui.screens.tabs.apps
 
 import android.content.Context
 import com.arjental.taimukka.domain.uc.ApplicationStatsUC
-import com.arjental.taimukka.domain.uc.SelectionTypeUC
+import com.arjental.taimukka.domain.uc.TypeUC
 import com.arjental.taimukka.domain.uc.TimelineUC
-import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
+import com.arjental.taimukka.entities.pierce.selection_type.Type
 import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import com.arjental.taimukka.entities.presentaion.app_details.toPresentation
 import com.arjental.taimukka.other.utils.components.TViewModel
@@ -22,27 +22,27 @@ class AppDetailsVM @Inject constructor(
     private val context: Context,
     private val dispatchers: TDispatcher,
     _timelineUC: Provider<TimelineUC>,
-    _selectionTypeUC: Provider<SelectionTypeUC>,
+    _typeUC: Provider<TypeUC>,
     applicationStatsUC: Provider<ApplicationStatsUC>,
 ) : TViewModel<ApplicationDetailsState, Unit>(
     initialState = ApplicationDetailsState(),
     dispatchers = dispatchers,
 ) {
     private val timelineUC by lazy { _timelineUC.get()!! }
-    private val selectionTypeUC by lazy { _selectionTypeUC.get()!! }
+    private val typeUC by lazy { _typeUC.get()!! }
     private val applicationStatsUC by lazy { applicationStatsUC.get()!! }
 
     private var setApplicationJob: Job? = null
 
     private val _timelineState = MutableStateFlow<Timeline?>(null)
 
-    private val _selectedType = MutableStateFlow<SelectionType?>(null)
+    private val _type = MutableStateFlow<Type?>(null)
 
     private var applicationPackage: String = ""
 
     fun timeline() = _timelineState.asStateFlow()
 
-    fun selectedType() = _selectedType.asStateFlow()
+    fun selectedType() = _type.asStateFlow()
 
     /**
      * Receive application package from other screen
@@ -57,8 +57,8 @@ class AppDetailsVM @Inject constructor(
                 }
                 timelineUC.getTimeline().collectLatest { timeline ->
                     _timelineState.emit(timeline)
-                    selectionTypeUC.getTypeSelection().collectLatest { selectionType ->
-                        _selectedType.emit(selectionType)
+                    typeUC.getType().collectLatest { type ->
+                        _type.emit(type)
                         timeline.let {
                             applicationStatsUC.applicationStats(timeline = timeline, appPackage = applicationPackage).collectLatest {
                                 launch {
@@ -83,9 +83,9 @@ class AppDetailsVM @Inject constructor(
         }
     }
 
-    fun changeSelectionType(selectionType: SelectionType) {
+    fun changeType(type: Type) {
         launch {
-            selectionTypeUC.setTypeSelection(selectionType)
+            typeUC.setType(type)
         }
     }
 

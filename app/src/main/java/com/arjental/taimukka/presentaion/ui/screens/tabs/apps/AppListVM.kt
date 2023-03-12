@@ -3,10 +3,10 @@ package com.arjental.taimukka.presentaion.ui.screens.tabs.apps
 import android.content.Context
 import com.arjental.taimukka.domain.uc.ApplicationsStatsUC
 import com.arjental.taimukka.domain.uc.CategorySelectionUC
-import com.arjental.taimukka.domain.uc.SelectionTypeUC
+import com.arjental.taimukka.domain.uc.TypeUC
 import com.arjental.taimukka.domain.uc.TimelineUC
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppDomain
-import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
+import com.arjental.taimukka.entities.pierce.selection_type.Type
 import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import com.arjental.taimukka.entities.presentaion.applist.AppListItemPres
 import com.arjental.taimukka.entities.presentaion.applist.CategoriesSelection
@@ -33,14 +33,14 @@ class AppListVM @Inject constructor(
     applicationsStatsUC: Provider<ApplicationsStatsUC>,
     timelineUC: Provider<TimelineUC>,
     categorySelectionUC: Provider<CategorySelectionUC>,
-    selectionTypeUC: Provider<SelectionTypeUC>,
+    typeUC: Provider<TypeUC>,
 ) : TViewModel<AppListState, AppListEffect>(
     initialState = AppListState(),
     dispatchers = dispatchers,
 ) {
     private val timelineUC by lazy { timelineUC.get()!! }
     private val categorySelectionUC by lazy { categorySelectionUC.get()!! }
-    private val selectionTypeUC by lazy { selectionTypeUC.get()!! }
+    private val typeUC by lazy { typeUC.get()!! }
     private val applicationsStatsUC by lazy { applicationsStatsUC.get()!! }
 
     /** Map stores all applications from cache with current timeline to fast search */
@@ -60,7 +60,7 @@ class AppListVM @Inject constructor(
 
     private val _selectedCategoryState = MutableStateFlow<CategoriesSelection?>(null)
 
-    private val _selectedType = MutableStateFlow<SelectionType?>(null)
+    private val _type = MutableStateFlow<Type?>(null)
 
     init {
         addApplicationDetailsToStack()
@@ -91,7 +91,7 @@ class AppListVM @Inject constructor(
 
     fun selectedCategory() = _selectedCategoryState.asStateFlow()
 
-    fun selectedType() = _selectedType.asStateFlow()
+    fun selectedType() = _type.asStateFlow()
 
     @OptIn(FlowPreview::class)
     private fun loadApplicationStats() {
@@ -101,9 +101,9 @@ class AppListVM @Inject constructor(
                 _timelineState.emit(timeline)
                 applicationsStatsJob?.cancelAndJoin()
                 applicationsStatsJob = this@AppListVM.launch {
-                    selectionTypeUC.getTypeSelection().collectLatest { selectionType -> // collect selected type
-                        _selectedType.emit(selectionType)
-                        applicationsStatsUC.applicationsStats(timeline = timeline, selectionType = selectionType).handleErrors(defaultOnError = emptyList()).collectLatest { res -> //get values from manager
+                    typeUC.getType().collectLatest { type -> // collect selected type
+                        _type.emit(type)
+                        applicationsStatsUC.applicationsStats(timeline = timeline, type = type).handleErrors(defaultOnError = emptyList()).collectLatest { res -> //get values from manager
                             categorySelectionUC.getCategorySelection().collectLatest { categoryType -> //also get category type
                                 res.onDataTransform(
                                     onLoading = { res -> _appListState.update { it.copy(list = res.data ?: persistentListOf(), loading = true, error = null) } },
@@ -197,9 +197,9 @@ class AppListVM @Inject constructor(
         }
     }
 
-    fun changeSelectionType(selectionType: SelectionType) {
+    fun changeType(type: Type) {
         launch {
-            selectionTypeUC.setTypeSelection(selectionType)
+            typeUC.setType(type)
         }
     }
 

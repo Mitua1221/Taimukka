@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.ImageBitmap
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppDetailedDomain
-import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
+import com.arjental.taimukka.entities.pierce.selection_type.Type
 import com.arjental.taimukka.other.utils.annotataions.Category
 import com.arjental.taimukka.other.utils.images.loadPackageIcon
 import kotlinx.collections.immutable.ImmutableList
@@ -30,7 +30,7 @@ data class AppDetailedPresentation(
 @Immutable
 @kotlinx.serialization.Serializable
 data class AppDetailedListItemPresentation(
-    val type: SelectionType,
+    val type: Type,
     val percentage: Float = 0f,
     val value: Long,
 ) : java.io.Serializable
@@ -46,37 +46,27 @@ suspend fun LaunchedAppDetailedDomain.toPresentation(
         appCategory = appCategory,
         detailedList = persistentListOf(
             AppDetailedListItemPresentation( //screen time
-                type = SelectionType.SCREEN_TIME,
+                type = Type.SCREEN_TIME,
                 percentage = screenTimePercentage,
                 value = screenTimeMillis
             ),
             AppDetailedListItemPresentation( //screen time
-                type = SelectionType.NOTIFICATIONS,
+                type = Type.NOTIFICATIONS_RECEIVED,
                 percentage = notificationsPercentage,
                 value = notificationsQuality.toLong()
             ),
             AppDetailedListItemPresentation(
-                type = SelectionType.SEANCES,
+                type = Type.SEANCES,
                 percentage = seancesPercentage,
                 value = seancesQuality.toLong()
             )
         ),
         detailedAdditionalList = persistentListOf(
             AppDetailedListItemPresentation( //screen time
-                type = SelectionType.SCREEN_TIME,
-                percentage = screenTimePercentage,
-                value = screenTimeMillis
+                type = Type.NOTIFICATIONS_SEEN,
+                percentage = 0f,
+                value = notificationsSeenQuality.toLong()
             ),
-            AppDetailedListItemPresentation( //screen time
-                type = SelectionType.NOTIFICATIONS,
-                percentage = notificationsPercentage,
-                value = notificationsQuality.toLong()
-            ),
-            AppDetailedListItemPresentation(
-                type = SelectionType.SEANCES,
-                percentage = seancesPercentage,
-                value = seancesQuality.toLong()
-            )
         )
     )
 

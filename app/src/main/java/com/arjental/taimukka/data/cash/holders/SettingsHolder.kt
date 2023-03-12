@@ -3,7 +3,7 @@ package com.arjental.taimukka.data.cash.holders
 import com.arjental.taimukka.data.cash.Database
 import com.arjental.taimukka.data.settings.ColorScheme
 import com.arjental.taimukka.entities.data.cash.AppSettings
-import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
+import com.arjental.taimukka.entities.pierce.selection_type.Type
 import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import com.arjental.taimukka.entities.pierce.timeline.TimelineType
 import kotlinx.coroutines.coroutineScope
@@ -39,14 +39,14 @@ interface SettingsHolder {
     suspend fun setCategorySelection(category: Int?)
 
     /**
-     * Get selected category that selected now, defined by [SelectionType].
+     * Get selected category that selected now, defined by [Type].
      */
-    fun getTypeSelection(): Flow<SelectionType>
+    fun getType(): Flow<Type>
 
     /**
-     * Save selected type for all app, typed by [SelectionType]
+     * Save selected type for all app, typed by [Type]
      */
-    suspend fun setTypeSelection(selectionType: SelectionType)
+    suspend fun setType(type: Type)
 }
 
 class SettingsHolderImpl @Inject constructor(
@@ -142,13 +142,13 @@ class SettingsHolderImpl @Inject constructor(
         settings.setSettingsItem(wrap(k = SELECTED_CATEGORY, v = category?.toString() ?: (-1).toString()))
     }
 
-    override fun getTypeSelection(): Flow<SelectionType> =
+    override fun getType(): Flow<Type> =
         settings.getSettingsItemFlow(settingKey = SELECTED_TYPE).map { selectedType ->
-            selectedType?.settingsValue?.let { SelectionType.valueOf(it) } ?: SelectionType.SCREEN_TIME
+            selectedType?.settingsValue?.let { Type.valueOf(it) } ?: Type.SCREEN_TIME
         }
 
-    override suspend fun setTypeSelection(selectionType: SelectionType) =
-        settings.setSettingsItem(wrap(k = SELECTED_TYPE, v = selectionType.toString()))
+    override suspend fun setType(type: Type) =
+        settings.setSettingsItem(wrap(k = SELECTED_TYPE, v = type.toString()))
 
 }
 

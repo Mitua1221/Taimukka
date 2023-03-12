@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,13 +16,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.core.content.ContextCompat
 import com.arjental.taimukka.R
-import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
+import com.arjental.taimukka.entities.pierce.selection_type.Type
 import com.arjental.taimukka.entities.presentaion.app_details.AppDetailedListItemPresentation
 import com.arjental.taimukka.entities.presentaion.app_details.AppDetailedPresentation
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
-import com.arjental.taimukka.presentaion.ui.components.TDropdownItem
 import com.arjental.taimukka.presentaion.ui.components.app.ContentType
 import com.arjental.taimukka.presentaion.ui.components.filters.TDetailsFilters
 import com.arjental.taimukka.presentaion.ui.components.header.THeader
@@ -34,6 +33,7 @@ import com.arjental.taimukka.presentaion.ui.images.ticons.catagories.Seances
 import com.arjental.taimukka.presentaion.ui.images.ticons.catagories.Timeline
 import com.arjental.taimukka.presentaion.ui.screens.tabs.apps.AppDetailsVM
 import com.arjental.taimukka.presentaion.ui.screens.tabs.apps.ApplicationDetailsState
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 
@@ -135,35 +135,11 @@ fun AppDetails(screenState: State<ApplicationDetailsState>) {
                         }
                     }
 
-
-//        item(
-//            key = "filters"
-//        ) {
-//            val viewModel = daggerViewModel<AppListVM>()
-//            val timelineState = viewModel.timeline().collectAsState()
-//            val selectedCategoryState = viewModel.selectedCategory().collectAsState()
-//            TFilters(
-//                modifier = Modifier.padding(bottom = 16.dp),
-//                timelineState = timelineState,
-//                changeTimeline = {
-//                    viewModel.changeTimeline(it)
-//                },
-//                categoriesState = selectedCategoryState,
-//                changeCategory = { viewModel.selectCategory(it) }
-//            )
-//        }
-//
-//
-//        screenState.value.list.forEach { app ->
-//            item(
-//                key = app.packageName
-//            ) {
-//                val ctx = LocalContext.current
-//                val category = remember { getAppCategoryName(appCategory = app.appCategory, context = ctx) }
-//                AppListItem(item = app, category = category)
-//            }
-//        }
-
+                    item (key = "additionalList") {
+                        AppPresentationStatisticAdditionalList(
+                            appPresValue.detailedAdditionalList
+                        )
+                    }
 
                 }
             }
@@ -191,7 +167,7 @@ private fun AppDetailsTopElements(appPresentation: AppDetailedPresentation) {
             timelineState = viewModel.timeline().collectAsState(),
             changeTimeline = { viewModel.changeTimeline(it) },
             typeState = viewModel.selectedType().collectAsState(),
-            changeType = { viewModel.changeSelectionType(it) })
+            changeType = { viewModel.changeType(it) })
         Text(
             modifier = Modifier
                 .fillMaxWidth()
@@ -211,17 +187,17 @@ private fun AppDetailsTopElements(appPresentation: AppDetailedPresentation) {
     }
 }
 
-@Preview
-@Composable
-fun AppPresentationStatisticDefaultCardElementPreview() {
-    AppPresentationStatisticDefaultCardElement(
-        AppDetailedListItemPresentation(
-            type = SelectionType.SCREEN_TIME,
-            percentage = 0.34f,
-            value = 12312412L
-        )
-    )
-}
+//@Preview
+//@Composable
+//fun AppPresentationStatisticDefaultCardElementPreview() {
+//    AppPresentationStatisticDefaultCardElement(
+//        AppDetailedListItemPresentation(
+//            type = SelectionType.SCREEN_TIME,
+//            percentage = 0.34f,
+//            value = 12312412L
+//        )
+//    )
+//}
 
 @Composable
 private fun AppPresentationStatisticDefaultCardElement(item: AppDetailedListItemPresentation) {
@@ -256,7 +232,7 @@ private fun AppPresentationStatisticDefaultCardElement(item: AppDetailedListItem
             val context = LocalContext.current
 
             val appValuableText = remember {
-                formatSelectionTypeValue(context = context, selectionType = item.type, quality = item.value)
+                formatTypeValue(context = context, type = item.type, quality = item.value)
             }
 
             Text(
@@ -304,21 +280,104 @@ private fun AppPresentationStatisticDefaultCardElement(item: AppDetailedListItem
     }
 }
 
+@Preview
 @Composable
-private fun SelectionType.typedIcon() =
+fun AppPresentationStatisticAdditionalListPreview() {
+    AppPresentationStatisticAdditionalListItem(
+        AppDetailedListItemPresentation(
+            type = Type.SCREEN_TIME,
+            percentage = 0.0f,
+            value = 911911911911
+        )
+    )
+}
+
+@Composable
+private fun AppPresentationStatisticAdditionalList(list: ImmutableList<AppDetailedListItemPresentation>) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 24.dp)
+    ) {
+
+        list.forEachIndexed { index, item ->
+            item(key = item.type.name) {
+                AppPresentationStatisticAdditionalListItem(item)
+            }
+        }
+
+    }
+}
+
+@Composable
+private fun AppPresentationStatisticAdditionalListItem(item: AppDetailedListItemPresentation) {
+    Box(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp))
+    ) {
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            val (title, value, changeBubble) = createRefs()
+
+            val context = LocalContext.current
+
+            val appValuableText = remember {
+                formatTypeValue(context = context, type = item.type, quality = item.value)
+            }
+
+            Text(
+                modifier = Modifier
+                    .constrainAs(value) {
+                        start.linkTo(parent.start, margin = 16.dp)
+                        top.linkTo(parent.top, margin = 16.dp)
+                        end.linkTo(parent.end, margin = 16.dp)
+                    },
+                text = appValuableText,
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+
+            Box(modifier = Modifier
+                .constrainAs(title) {
+                    start.linkTo(parent.start, margin = 16.dp)
+                    end.linkTo(parent.end, margin = 16.dp)
+                    top.linkTo(value.bottom, margin = 10.dp)
+                    bottom.linkTo(parent.bottom, margin = 16.dp)
+                    width = Dimension.preferredWrapContent
+                }
+            ) {
+                Text(
+                    modifier = Modifier.align(Alignment.CenterStart),
+                    text = item.type.getString(context),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        }
+
+    }
+}
+
+
+@Composable
+private fun Type.typedIcon() =
     when (this) {
-        SelectionType.NOTIFICATIONS -> TIcons.Notifications
-        SelectionType.SCREEN_TIME -> TIcons.Timeline
-        SelectionType.SEANCES -> TIcons.Seances
+        Type.NOTIFICATIONS_RECEIVED -> TIcons.Notifications
+        Type.SCREEN_TIME -> TIcons.Timeline
+        Type.SEANCES -> TIcons.Seances
         else -> null
     }
 
-private fun SelectionType.getString(context: Context): String =
+private fun Type.getString(context: Context): String =
     context.getString(
         when (this) {
-            SelectionType.SEANCES -> R.string.filters_seances
-            SelectionType.NOTIFICATIONS -> R.string.filters_notifications
-            SelectionType.SCREEN_TIME -> R.string.filters_screen_time
+            Type.SEANCES -> R.string.filters_seances
+            Type.NOTIFICATIONS_RECEIVED -> R.string.filters_notifications
+            Type.SCREEN_TIME -> R.string.filters_screen_time
+            Type.NOTIFICATIONS_SEEN -> R.string.filters_notifications_shown
+            Type.FOREGROUND_STARTS -> R.string.filters_foreground_starts
         }
     )
 

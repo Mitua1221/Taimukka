@@ -1,7 +1,6 @@
 package com.arjental.taimukka.domain.uc
 
 import com.arjental.taimukka.domain.repos.UserStatsRepository
-import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
 import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import javax.inject.Inject
 
@@ -11,7 +10,7 @@ class ApplicationStatsUC @Inject constructor(
 
     /**
      * @param timeline defined timeline that selected in a filters
-     * @param selectionType defined type that was selected in a filters by user
+     * @param appPackage defined package of application witch need to be shown
      */
     suspend fun applicationStats(timeline: Timeline, appPackage: String) = userStatsRepository.applicationStats(timeline = timeline, appPackage = appPackage)
 

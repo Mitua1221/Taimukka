@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
+import com.arjental.taimukka.entities.pierce.selection_type.Type
 import com.arjental.taimukka.entities.presentaion.applist.AppListItemPres
 import com.arjental.taimukka.other.utils.factories.viewmodel.daggerViewModel
 import com.arjental.taimukka.other.utils.resources.formatMillisToPresentation
@@ -83,7 +83,7 @@ fun AppList(screenState: State<ApplicationsListState>) {
                 changeCategory = { viewModel.selectCategory(it) },
                 typeState = selectedTypeState,
                 changeType = {
-                    viewModel.changeSelectionType(it)
+                    viewModel.changeType(it)
                 }
             )
         }
@@ -108,7 +108,7 @@ fun AppList(screenState: State<ApplicationsListState>) {
 @Composable
 fun Foo() {
     AppListItem(
-        item = AppListItemPres(title = "Tinkoff", packageName = "com.tinkoff.bank", appIcon = null, nonSystem = true, appCategory = 1, realQuality = 1000000000, selectionType = SelectionType.NOTIFICATIONS),
+        item = AppListItemPres(title = "Tinkoff", packageName = "com.tinkoff.bank", appIcon = null, nonSystem = true, appCategory = 1, realQuality = 1000000000, type = Type.NOTIFICATIONS_RECEIVED),
         category = "somecategory",
         onClick = {  }
     )
@@ -211,7 +211,7 @@ fun AppListItem(
 
 
             val appValuableText = remember {
-                formatSelectionTypeValue(context = context, selectionType = item.selectionType, quality = item.realQuality)
+                formatTypeValue(context = context, type = item.type, quality = item.realQuality)
             }
 
             Box(modifier = Modifier
@@ -253,12 +253,13 @@ fun AppListItem(
 /**
  * Formatting typed value to presentation string
  */
-fun formatSelectionTypeValue(selectionType: SelectionType, context: Context, quality: Long): String {
-    return when (selectionType) {
-        SelectionType.SCREEN_TIME -> formatMillisToPresentation(context, quality)
-        SelectionType.SEANCES -> quality.toString()
-        SelectionType.NOTIFICATIONS -> quality.toString()
-        else -> error("SelectionType not handled on ui")
+fun formatTypeValue(type: Type, context: Context, quality: Long): String {
+    return when (type) {
+        Type.SCREEN_TIME -> formatMillisToPresentation(context, quality)
+        Type.SEANCES -> quality.toString()
+        Type.NOTIFICATIONS_RECEIVED -> quality.toString()
+        Type.NOTIFICATIONS_SEEN -> quality.toString()
+        else -> error("Type not handled on ui")
     }
 }
 

@@ -3,7 +3,7 @@ package com.arjental.taimukka.entities.domain.stats
 import com.arjental.taimukka.other.utils.annotataions.Category
 
 /**
-
+ * Provides detailed information about application for application details screen
  */
 data class LaunchedAppDetailedDomain(
     val appPackage: String,
@@ -15,15 +15,18 @@ data class LaunchedAppDetailedDomain(
     val screenTimeMillis: Long,
     val screenTimePercentage: Float = 0f,
 
-    val notificationsMarks: List<NotificationsReceivedDomain>,
+    val notificationsMarks: List<Long>,
     val notificationsQuality: Int,
     val notificationsPercentage: Float = 0f,
+
+    val notificationsSeenQuality: Int,
 
     val seancesQuality: Int,
     val seancesPercentage: Float = 0f,
 
-
-    )
+//    val notificationsSeen: Int,
+//    val foregroundServicesStarted: Int = 71
+)
 
 fun LaunchedAppDomain.toDetailed(
     screenTimePercentage: Float,
@@ -32,6 +35,7 @@ fun LaunchedAppDomain.toDetailed(
     notificationsQuality: Int,
     seancesQuality: Int,
     screenTimeMillis: Long,
+    notificationsSeenQuality: Int,
 ): LaunchedAppDetailedDomain {
     return LaunchedAppDetailedDomain(
         appPackage = appPackage,
@@ -41,10 +45,11 @@ fun LaunchedAppDomain.toDetailed(
         launches = launches,
         screenTimePercentage = screenTimePercentage,
         screenTimeMillis = screenTimeMillis,
-        notificationsMarks = notificationsMarks,
+        notificationsMarks = notificationsReceived,
         notificationsQuality = notificationsQuality,
         notificationsPercentage = notificationsPercentage,
         seancesQuality = seancesQuality,
         seancesPercentage = seancesPercentage,
+        notificationsSeenQuality = notificationsSeenQuality,
     )
 }

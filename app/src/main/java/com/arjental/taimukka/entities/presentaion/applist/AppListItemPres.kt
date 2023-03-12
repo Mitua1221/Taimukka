@@ -3,7 +3,7 @@ package com.arjental.taimukka.entities.presentaion.applist
 import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppDomain
-import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
+import com.arjental.taimukka.entities.pierce.selection_type.Type
 import com.arjental.taimukka.other.utils.annotataions.Category
 import com.arjental.taimukka.other.utils.images.loadPackageIcon
 import kotlinx.collections.immutable.ImmutableList
@@ -18,7 +18,7 @@ data class AppListItemPres(
     @Category val appCategory: Int?,
     val percentage: Float = 0f,
     val realQuality: Long = 0,
-    val selectionType: SelectionType
+    val type: Type
 ): java.io.Serializable
 
 suspend fun List<LaunchedAppDomain>.toPresentation(context: Context): ImmutableList<AppListItemPres> {
@@ -36,7 +36,7 @@ suspend fun LaunchedAppDomain.toPresentation(context: Context) =
         appCategory = this.appCategory,
         percentage = this.percentage,
         realQuality = this.realQuality,
-        selectionType = this.selectionType,
+        type = this.type,
     )
 
 

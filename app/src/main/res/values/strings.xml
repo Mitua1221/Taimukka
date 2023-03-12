@@ -46,6 +46,8 @@
     <string name="filters_seances">Seances</string>
     <string name="filters_notifications">Notifications</string>
     <string name="filters_screen_time">Screen time</string>
+    <string name="filters_notifications_shown">Notifications shown</string>
+    <string name="filters_foreground_starts">Foreground services starts</string>
 
     <!--timeline selection-->
     <string name="tilmeline_year">%1$s y</string>

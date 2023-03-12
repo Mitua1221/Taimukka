@@ -1,16 +1,16 @@
 package com.arjental.taimukka.entities.domain.stats
 
-import com.arjental.taimukka.entities.data.cash.ApplicationInfoCash
-import com.arjental.taimukka.entities.data.cash.ApplicationStatsCash
 import com.arjental.taimukka.entities.data.cash.ApplicationForegroundMarksCash
+import com.arjental.taimukka.entities.data.cash.ApplicationInfoCash
 import com.arjental.taimukka.entities.data.cash.ApplicationNotificationsMarksCash
-import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
+import com.arjental.taimukka.entities.data.cash.ApplicationStatsCash
+import com.arjental.taimukka.entities.pierce.selection_type.Type
 import com.arjental.taimukka.other.utils.annotataions.Category
 
 /**
  * @param percentage means percents in float like 0.50 - means 50 percents
- * @param realQuality Quality to preview by different [SelectionType], may be in millis for [SelectionType.SCREEN_TIME],
- * in size for [SelectionType.SEANCES] or [SelectionType.NOTIFICATIONS].
+ * @param realQuality Quality to preview by different [Type], may be in millis for [Type.SCREEN_TIME],
+ * in size for [Type.SEANCES] or [Type.NOTIFICATIONS_RECEIVED].
  */
 data class LaunchedAppDomain(
     val appPackage: String,
@@ -18,10 +18,11 @@ data class LaunchedAppDomain(
     val nonSystem: Boolean,
     @Category val appCategory: Int?,
     val launches: List<LaunchedAppTimeMarkDomain>,
-    val notificationsMarks: List<NotificationsReceivedDomain>,
+    val notificationsReceived: List<Long> = emptyList(),
+    val notificationsSeen: List<Long> = emptyList(),
     val percentage: Float = 0f,
     val realQuality: Long = 0,
-    val selectionType: SelectionType = SelectionType.SCREEN_TIME
+    val type: Type = Type.SCREEN_TIME
 )
 
 data class LaunchedAppTimeMarkDomain(
@@ -43,18 +44,18 @@ suspend fun List<LaunchedAppDomain>.toCash(): List<ApplicationStatsCash> = this.
         ),
         foregroundMarks = it.launches.map { launch ->
             ApplicationForegroundMarksCash(
-                key = it.appPackage+launch.from,
-                from = launch.from,
-                to = launch.to,
-                appPackage = it.appPackage
+                key = it.appPackage + launch.from,
+                from = launch.from, to = launch.to, appPackage = it.appPackage
             )
         },
-        notificationsMarks = it.notificationsMarks.map { notification ->
+        notifications = it.notificationsReceived.map { notification ->
             ApplicationNotificationsMarksCash(
-                key = it.appPackage+notification.time,
-                appPackage = it.appPackage,
-                time = notification.time
+                key = it.appPackage + notification + ApplicationNotificationsMarksCash.RECEIVED, appPackage = it.appPackage, time = notification, type = ApplicationNotificationsMarksCash.RECEIVED
             )
-        }
+        } + it.notificationsSeen.map { notification -> //we combine received notifications with seen notifications with just a different types
+            ApplicationNotificationsMarksCash(
+                key = it.appPackage + notification + ApplicationNotificationsMarksCash.SEEN, appPackage = it.appPackage, time = notification, type = ApplicationNotificationsMarksCash.SEEN
+            )
+        },
     )
 }

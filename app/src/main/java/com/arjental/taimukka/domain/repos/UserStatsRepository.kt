@@ -7,7 +7,7 @@ import com.arjental.taimukka.entities.data.cash.toDomain
 import com.arjental.taimukka.entities.data.user_stats.toDomain
 import com.arjental.taimukka.entities.domain.stats.*
 import com.arjental.taimukka.entities.pierce.SESSION_DEBOUNCE
-import com.arjental.taimukka.entities.pierce.selection_type.SelectionType
+import com.arjental.taimukka.entities.pierce.selection_type.Type
 import com.arjental.taimukka.entities.pierce.timeline.Timeline
 import com.arjental.taimukka.entities.pierce.timeline.TimelineType
 import com.arjental.taimukka.entities.pierce.timeline.TimelineTypeMax
@@ -26,7 +26,7 @@ interface UserStatsRepository {
 
 
 
-    suspend fun applicationsStats(timeline: Timeline, selectionType: SelectionType): Flow<Resource<List<LaunchedAppDomain>>>
+    suspend fun applicationsStats(timeline: Timeline, type: Type): Flow<Resource<List<LaunchedAppDomain>>>
 
     /**
      * Provides to get application stats with all information about application - all timelines and etc
@@ -66,17 +66,18 @@ class UserStatsRepositoryImpl @Inject constructor(
     //TODO we lost active application timeline when its running
     //TODO merge activity periods if its less that a seconds between
 
-    override suspend fun applicationsStats(timeline: Timeline, selectionType: SelectionType): Flow<Resource<List<LaunchedAppDomain>>> = channelFlow {
+    override suspend fun applicationsStats(timeline: Timeline, type: Type): Flow<Resource<List<LaunchedAppDomain>>> = channelFlow {
         send(Resource.loading())
 
         //count application stats
         val applicationsStats = wrapApplicationStats(timeline)
 
         //count percentages and values
-        val elementsWithPercents = when (selectionType) {
-            SelectionType.SCREEN_TIME -> countTimelinesUsageInterest(applicationsStats)
-            SelectionType.NOTIFICATIONS -> countNotifications(applicationsStats)
-            SelectionType.SEANCES -> countSeances(applicationsStats)
+        val elementsWithPercents = when (type) {
+            Type.SCREEN_TIME -> countTimelinesUsageInterest(applicationsStats)
+            Type.NOTIFICATIONS_RECEIVED -> countNotificationsReceived(applicationsStats)
+            Type.SEANCES -> countSeances(applicationsStats)
+            else -> error("this type cant be processed, because its not filterable")
         }.sortedByDescending { it.realQuality }
 
         //paste
@@ -96,15 +97,16 @@ class UserStatsRepositoryImpl @Inject constructor(
 
         var notificationsPercentage: Float = 0f
         var notificationsQuality = 0
+        var notificationsSeenQuality = 0
 
         var seancesQuality = 0
         var seancesPercentage: Float = 0f
 
         //here we can to count percentages
-        SelectionType.values().map {
+        Type.values().map {
             async {
                 when (it) {
-                    SelectionType.SCREEN_TIME -> { // count screen time and send percentage
+                    Type.SCREEN_TIME -> { // count screen time and send percentage
                         countTimelinesUsageInterest(applicationsStats)
                             .find { it.appPackage == appPackage }
                             ?.let {
@@ -112,21 +114,29 @@ class UserStatsRepositoryImpl @Inject constructor(
                                 screenTimeMillis = it.realQuality
                             }
                     }
-                    SelectionType.NOTIFICATIONS -> { // count notifications quality and percentage
-                        countNotifications(applicationsStats)
+                    Type.NOTIFICATIONS_RECEIVED -> { // count notifications quality and percentage
+                        countNotificationsReceived(applicationsStats)
                             .find { it.appPackage == appPackage }
                             ?.let {
-                                notificationsQuality = it.notificationsMarks.size
+                                notificationsQuality = it.notificationsReceived.size
                                 notificationsPercentage = it.percentage
                             }
                     }
-                    SelectionType.SEANCES -> { // count seances and percentage
+                    Type.SEANCES -> { // count seances and percentage
                         countSeances(applicationsStats)
                             .find { it.appPackage == appPackage }
                             ?.let {
                                 seancesQuality = it.launches.size
                                 seancesPercentage = it.percentage
                             }
+                    }
+                    Type.NOTIFICATIONS_SEEN -> { // count seances and percentage
+                        application?.let {
+                            notificationsSeenQuality = countNotificationsSeen(application)
+                        }
+                    }
+                    else -> {
+
                     }
                 }
             }
@@ -139,6 +149,7 @@ class UserStatsRepositoryImpl @Inject constructor(
             notificationsQuality = notificationsQuality,
             seancesQuality = seancesQuality,
             screenTimeMillis = screenTimeMillis,
+            notificationsSeenQuality = notificationsSeenQuality,
         )
 
 
@@ -342,7 +353,7 @@ class UserStatsRepositoryImpl @Inject constructor(
             it.await()
         }.map {
             val percentage = it.second.divideToPercent(allApplicationRuntimeInMillis)
-            it.first.copy(percentage = percentage, realQuality = it.second, selectionType = SelectionType.SCREEN_TIME)
+            it.first.copy(percentage = percentage, realQuality = it.second, type = Type.SCREEN_TIME)
         }.sortedByDescending { it.realQuality }
     }
 
@@ -382,23 +393,32 @@ class UserStatsRepositoryImpl @Inject constructor(
             it.await()
         }.map {
             val percentage = it.second.divideToPercent(allApplicationsLaunchQuality)
-            it.first.copy(percentage = percentage, realQuality = it.second.toLong(), selectionType = SelectionType.SEANCES )
+            it.first.copy(percentage = percentage, realQuality = it.second.toLong(), type = Type.SEANCES )
         }
     }
 
     /**
-     * Count notifications size in all applications and its common percentage.
+     * Count received notifications size in all applications and its common percentage.
      */
-    private suspend fun countNotifications(applications: List<LaunchedAppDomain>): List<LaunchedAppDomain> {
+    private suspend fun countNotificationsReceived(applications: List<LaunchedAppDomain>): List<LaunchedAppDomain> {
         var allApplicationsNotifications = 0 //all notificationsQuality
         return applications.map { //in app list
-            val notificationsSize = it.notificationsMarks.size
+            val notificationsSize = it.notificationsReceived.size
             allApplicationsNotifications += notificationsSize
             it to notificationsSize
         }.map {
             val percentage = it.second.divideToPercent(allApplicationsNotifications)
-            it.first.copy(percentage = percentage, realQuality = it.second.toLong(), selectionType = SelectionType.NOTIFICATIONS)
+            it.first.copy(percentage = percentage, realQuality = it.second.toLong(), type = Type.NOTIFICATIONS_RECEIVED)
         }
+    }
+
+
+    /**
+     * Count seen notifications size in all applications and its common percentage.
+     * @return [Int] of seen notifications
+     */
+    private suspend fun countNotificationsSeen(application: LaunchedAppDomain): Int {
+        return application.notificationsSeen.size
     }
 
 }

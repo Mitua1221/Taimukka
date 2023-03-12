@@ -3,7 +3,6 @@ package com.arjental.taimukka.entities.data.cash
 import androidx.room.*
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppDomain
 import com.arjental.taimukka.entities.domain.stats.LaunchedAppTimeMarkDomain
-import com.arjental.taimukka.entities.domain.stats.NotificationsReceivedDomain
 import com.arjental.taimukka.other.utils.annotataions.Category
 
 data class ApplicationStatsCash(
@@ -17,7 +16,7 @@ data class ApplicationStatsCash(
         parentColumn = "app_package",
         entityColumn = "app_package_sync"
     )
-    val notificationsMarks: List<ApplicationNotificationsMarksCash>
+    val notifications: List<ApplicationNotificationsMarksCash>,
 )
 
 @Entity(tableName = "applications_info")
@@ -36,18 +35,28 @@ class ApplicationForegroundMarksCash(
     @ColumnInfo(name = "to") val to: Long,
 )
 
+/**
+ * @param type is string that defined notification was seen or received in this time
+ */
+
 @Entity(tableName = "applications_notifications_marks")
 class ApplicationNotificationsMarksCash(
     @ColumnInfo(name = "key_with_time") @PrimaryKey val key: String,
+    @ColumnInfo(name = "notifications_type") val type: String,
     @ColumnInfo(name = "app_package_sync") val appPackage: String,
     @ColumnInfo(name = "time") val time: Long,
-)
+) {
+    companion object {
+        const val SEEN = "SEEN"
+        const val RECEIVED = "RECEIVED"
+    }
+}
 
 suspend fun List<ApplicationStatsCash>.toDomain() = this.map {
     it.toDomain()
 }
 
-suspend inline fun ApplicationStatsCash.toDomain() =  LaunchedAppDomain(
+suspend inline fun ApplicationStatsCash.toDomain() = LaunchedAppDomain(
     appPackage = this.appInfo.appPackage,
     appName = this.appInfo.appName,
     nonSystem = this.appInfo.nonSystem,
@@ -58,9 +67,14 @@ suspend inline fun ApplicationStatsCash.toDomain() =  LaunchedAppDomain(
         )
     },
     appCategory = this.appInfo.appCategory,
-    notificationsMarks = this.notificationsMarks.map {
-        NotificationsReceivedDomain(
-            time = it.time
-        )
+    notificationsReceived = this.notifications.filter {
+        it.type == ApplicationNotificationsMarksCash.RECEIVED
+    }.map {
+        it.time
+    },
+    notificationsSeen = this.notifications.filter {
+        it.type == ApplicationNotificationsMarksCash.SEEN
+    }.map {
+        it.time
     }
 )

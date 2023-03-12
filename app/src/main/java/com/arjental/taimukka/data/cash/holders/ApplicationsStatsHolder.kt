@@ -3,6 +3,7 @@ package com.arjental.taimukka.data.cash.holders
 import com.arjental.taimukka.data.cash.Database
 import com.arjental.taimukka.entities.data.cash.ApplicationStatsCash
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
 
@@ -40,14 +41,14 @@ class ApplicationsStatsHolderImpl @Inject constructor(
     override suspend fun getApplication(from: Long, to: Long, appPackage: String): ApplicationStatsCash? =
         applicationsStats.getApplication(appPackage = appPackage)?.filterCashedAppFields(from = from, to = to)
 
-    override suspend fun setApplications(applicationsList: List<ApplicationStatsCash>) = coroutineScope {
+    override suspend fun setApplications(applicationsList: List<ApplicationStatsCash>): Unit = coroutineScope {
         applicationsList.map {
             async {
                 applicationsStats.setApplication(app = it.appInfo)
                 applicationsStats.setApplicationForegroundMarks(timeMarksList = it.foregroundMarks)
-                applicationsStats.setApplicationNotificationsMarks(notificationMarks = it.notificationsMarks)
+                applicationsStats.setApplicationNotificationsMarks(notificationMarks = it.notifications)
             }
-        }.forEach { it.await() }
+        }.awaitAll()
     }
 
     override suspend fun clearApplicationsList() = applicationsStats.clear()
@@ -62,7 +63,7 @@ class ApplicationsStatsHolderImpl @Inject constructor(
             it.from >= from && it.to <= to
         },
         //here we filtering result to match given from-to
-        notificationsMarks = this.notificationsMarks.filter { it.time in from..to }
+        notifications = this.notifications.filter { it.time in from..to }
     )
 
 }

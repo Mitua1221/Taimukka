@@ -11,6 +11,8 @@ import android.os.Build
 import com.arjental.taimukka.entities.data.user_stats.AppInformation
 import com.arjental.taimukka.entities.data.user_stats.LaunchedApp
 import com.arjental.taimukka.entities.pierce.NOTIFICATION_INTERRUPTION
+import com.arjental.taimukka.entities.pierce.NOTIFICATION_SEEN
+import com.arjental.taimukka.entities.pierce.notification_type.NOTIFICATION
 import com.arjental.taimukka.other.utils.annotataions.Category
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -124,6 +126,26 @@ class UsageStatsManagerImpl @Inject constructor(
                 )
             }
 
+            if (usageEvent.eventType == NOTIFICATION_SEEN) {
+                //add notifications event to list
+                notificationInterrupted(
+                    applicationsMap = map,
+                    usageEvent = usageEvent,
+                    appInfo = appInfo[usageEvent.packageName],
+                    notificationType = NOTIFICATION.SEEN
+                )
+            }
+
+            if (usageEvent.eventType == NOTIFICATION_SEEN) {
+                //add notifications event to list
+                notificationInterrupted(
+                    applicationsMap = map,
+                    usageEvent = usageEvent,
+                    appInfo = appInfo[usageEvent.packageName],
+                    notificationType = NOTIFICATION.SEEN
+                )
+            }
+
         }
         return map.values.toList()
     }
@@ -158,11 +180,13 @@ class UsageStatsManagerImpl @Inject constructor(
      * @param applicationsMap if [LaunchedApp] not exists in it, we have to create it
      * @param usageEvent is event
      * @param appInfo if null, this app is deleted
+     * @param notificationType [NOTIFICATION.RECEIVED] for received, [NOTIFICATION.SEEN] for seen notifications
      */
     private suspend inline fun notificationInterrupted(
         applicationsMap: MutableMap<String, LaunchedApp>,
         usageEvent: UsageEvents.Event,
         appInfo: AppInformation?,
+        notificationType: NOTIFICATION = NOTIFICATION.RECEIVED
     ) {
         val packageName = usageEvent.packageName ?: appInfo?.packageName
 
@@ -173,7 +197,10 @@ class UsageStatsManagerImpl @Inject constructor(
                 appInfo = appInfo
             )
             //add to item, item exists
-            applicationsMap[packageName]?.notifications?.add(usageEvent.timeStamp)
+            when (notificationType) {
+                NOTIFICATION.SEEN -> applicationsMap[packageName]?.notificationsReceived?.add(usageEvent.timeStamp)
+                NOTIFICATION.RECEIVED -> applicationsMap[packageName]?.notificationsSeen?.add(usageEvent.timeStamp)
+            }
         }
     }
 

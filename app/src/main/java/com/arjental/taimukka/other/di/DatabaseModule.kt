@@ -10,13 +10,13 @@ import javax.inject.Singleton
 @Module
 open class DatabaseModule {
 
-    private val FILER_DATABASE_NAME: String = "FILER_DATABASE_NAME"
+    private val DATABASE_NAME: String = "TAIMUKKA_DATABASE"
 
     @Provides
     @Singleton
     fun provideFilerDatabases(
         context: Context
-    ): Database = Room.databaseBuilder(context.applicationContext, Database::class.java, FILER_DATABASE_NAME)
+    ): Database = Room.databaseBuilder(context.applicationContext, Database::class.java, DATABASE_NAME)
         .addMigrations()
         .build()
 

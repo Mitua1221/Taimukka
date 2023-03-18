@@ -10,8 +10,9 @@ import javax.inject.Inject
 interface UpdateTimesHolder {
     /**
      * Save updates of app's list
+     * @param from may be null because we dont update *from* value if launch isnt first
      */
-    suspend fun updatedAppList(from: Long, to: Long)
+    suspend fun updatedAppList(from: Long?, to: Long)
 
     /**
      * Get updates of app's list, if there was no updates, returns zeros
@@ -34,8 +35,8 @@ class UpdateTimesHolderImpl @Inject constructor(
 
     private val updateTime = database.updatesTime()
 
-    override suspend fun updatedAppList(from: Long, to: Long) {
-        updateTime.setUpdateTime(UpdateTimes(updatedName = UPDATE_APP_LIST_FROM, updatedTime = from))
+    override suspend fun updatedAppList(from: Long?, to: Long) {
+        if (from != null) updateTime.setUpdateTime(UpdateTimes(updatedName = UPDATE_APP_LIST_FROM, updatedTime = from))
         updateTime.setUpdateTime(UpdateTimes(updatedName = UPDATE_APP_LIST_TO, updatedTime = to))
     }
 

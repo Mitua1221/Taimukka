@@ -2,6 +2,7 @@ package com.arjental.taimukka.data.stats
 
 import android.annotation.SuppressLint
 import android.app.usage.UsageEvents
+import android.app.usage.UsageStats
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
@@ -9,38 +10,59 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
 import android.os.Build
 import com.arjental.taimukka.entities.data.user_stats.AppInformation
+import com.arjental.taimukka.entities.data.user_stats.GeneralAppInformation
 import com.arjental.taimukka.entities.data.user_stats.LaunchedApp
 import com.arjental.taimukka.entities.pierce.NOTIFICATION_INTERRUPTION
 import com.arjental.taimukka.entities.pierce.NOTIFICATION_SEEN
 import com.arjental.taimukka.entities.pierce.notification_type.NOTIFICATION
 import com.arjental.taimukka.other.utils.annotataions.Category
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
 
 
 interface UsageStatsManager {
-    suspend fun getApplicationsStats(startTimestamp: Long, finishTimestamp: Long): List<LaunchedApp>
+
+    /**
+     * Return [LaunchedApp] with timelines. Only for a few last days.
+     */
+    suspend fun getDetailedApplicationsStats(startTimestamp: Long, finishTimestamp: Long): List<LaunchedApp>
+
+    /**
+     * Return [LaunchedApp] with timelines. Only for a few last days.
+     */
+    suspend fun getApplicationsStats(startTimestamp: Long, finishTimestamp: Long): List<GeneralAppInformation>
 }
 
 //https://medium.com/@quiro91/show-app-usage-with-usagestatsmanager-d47294537dab
 //https://proandroiddev.com/accessing-app-usage-history-in-android-79c3af861ccf
 
+@SuppressLint("WrongConstant") // for [android.app.usage.UsageStatsManager] receiving
 class UsageStatsManagerImpl @Inject constructor(
-    private val context: Context
+    private val context: Context,
 ) : UsageStatsManager {
 
     private val packageManager: PackageManager by lazy { context.packageManager }
 
-    @SuppressLint("WrongConstant")
-    override suspend fun getApplicationsStats(startTimestamp: Long, finishTimestamp: Long): List<LaunchedApp> = withContext(Dispatchers.Default) {
-        val usageStatsManager = context.getSystemService("usagestats") as android.app.usage.UsageStatsManager
+    private val usageStatsManager: android.app.usage.UsageStatsManager by lazy { context.getSystemService("usagestats") as android.app.usage.UsageStatsManager }
+
+    override suspend fun getDetailedApplicationsStats(startTimestamp: Long, finishTimestamp: Long): List<LaunchedApp> {
 
         val appInfo = getInstalledApplications() //map packageName + AppInfo
 
         val usageEvents = usageStatsManager.queryEvents(startTimestamp, finishTimestamp)
 
-        return@withContext combineApplicationStats(usageEvents = usageEvents, appInfo = appInfo)
+        return combineApplicationStats(usageEvents = usageEvents, appInfo = appInfo)
+    }
+
+    @SuppressLint("WrongConstant")
+    override suspend fun getApplicationsStats(startTimestamp: Long, finishTimestamp: Long): List<GeneralAppInformation> = coroutineScope {
+
+        val appInfo = async { getInstalledApplications()  } //map packageName + AppInfo
+
+        val usageEventsMap = async { usageStatsManager.queryAndAggregateUsageStats(startTimestamp, finishTimestamp).toMap() } // keyed by package name
+
+        return@coroutineScope combineApplicationStats(usageEvents = usageEventsMap.await(), appInfo = appInfo.await())
     }
 
     private suspend fun getInstalledApplications(): Map<String, AppInformation> {
@@ -80,6 +102,36 @@ class UsageStatsManagerImpl @Inject constructor(
             info.applicationInfo.category
         } else null
     }
+
+    /**
+     * Combine with NON-detailed timelines
+     * @param usageEvents package name to [UsageStats], everything may be nullable
+     * @param appInfo our common map keyed by package name with some application information
+     */
+    private suspend fun combineApplicationStats(usageEvents: Map<String?, UsageStats?>?, appInfo: Map<String, AppInformation>): List<GeneralAppInformation> {
+        return appInfo.map {
+            val appInformation = it.value
+            val appUsageEvent = usageEvents?.get(it.key)
+
+            GeneralAppInformation(
+                appPackage = appInformation.packageName,
+                appName = appInformation.name,
+                nonSystem = !appInformation.isAppSystem,
+                appCategory = appInformation.appCategory,
+                firstTimeStamp = appUsageEvent?.firstTimeStamp,
+                lastTimeStamp = appUsageEvent?.lastTimeStamp,
+                totalTimeInForeground = appUsageEvent?.totalTimeInForeground ?: 0L,
+                totalTimeVisible = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) appUsageEvent?.totalTimeVisible else null,
+                totalTimeForegroundServiceUsed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) appUsageEvent?.totalTimeForegroundServiceUsed else null,
+                lastTimeVisible = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) appUsageEvent?.lastTimeVisible else null,
+                lastTimeUsed = appUsageEvent?.lastTimeUsed,
+            )
+        }
+    }
+
+    /**
+     * Combine with detailed timelines
+     */
 
     private suspend fun combineApplicationStats(usageEvents: UsageEvents, appInfo: Map<String, AppInformation>): List<LaunchedApp> {
 

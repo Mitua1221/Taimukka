@@ -6,7 +6,8 @@ import com.arjental.taimukka.other.utils.annotataions.Category
 
 /**
  * Only for [UserStatsManager] entities
- * @param notificationsReceived just holding notification timestamp
+ * @param notificationsReceived just holding received notification timestamps
+ * @param notificationsSeen just holding seen notification timestamps
  */
 class LaunchedApp(
     val appPackage: String,
@@ -16,6 +17,24 @@ class LaunchedApp(
     val notificationsReceived: MutableList<Long> = mutableListOf(),
     val notificationsSeen: MutableList<Long> = mutableListOf(),
     @Category val appCategory: Int?,
+)
+
+/**
+ * Only for [UserStatsManager] entities.
+ * @param lastTimeVisible requires [API 29] level, on api < 29 is null
+ */
+class GeneralAppInformation(
+    val appPackage: String,
+    val appName: String,
+    val nonSystem: Boolean,
+    @Category val appCategory: Int?,
+    val firstTimeStamp: Long?,
+    val lastTimeStamp: Long?,
+    val totalTimeInForeground: Long,
+    val totalTimeVisible: Long?,
+    val totalTimeForegroundServiceUsed: Long?,
+    val lastTimeVisible: Long?,
+    val lastTimeUsed: Long?,
 )
 
 suspend fun List<LaunchedApp>.toDomain(): List<LaunchedAppDomain> {

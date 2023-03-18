@@ -34,12 +34,12 @@ interface UserStatsRepository {
     suspend fun applicationStats(timeline: Timeline, appPackage: String): Flow<Resource<LaunchedAppDetailedDomain>>
 
     /**
-     * @param manager  holds real timestamp **|from|----|to|** in millis that we have to get from devices, because we dont have this data in cache
+     * @param managerDetailed  holds real timestamp **|from|----|to|** in millis that we have to get from devices, because we dont have this data in cache
      * @param cache holds real timestamp **|from|----|to|** in millis that we have to get from cache, because this data already in cache
      */
 
-    class MergedTimes(
-        val manager: Select?,
+    data class MergedTimes(
+        val managerDetailed: Select?,
         val cache: Select?,
     )
 
@@ -66,16 +66,56 @@ class UserStatsRepositoryImpl @Inject constructor(
     //TODO we lost active application timeline when its running
     //TODO merge activity periods if its less that a seconds between
 
+    /**
+     * Must be launched on first initializing of application.
+     * After launch all applications data is cached.
+     */
+    private suspend fun firstLoadApplicationsStats() {
+        wrapApplicationStats(
+            timeline = Timeline(
+                timelineType = TimelineType.CUSTOM,
+                from = 0L,
+                to = TimeUtil.getStartOfTomorrowTimestamp()
+            )
+        )
+    }
+
     override suspend fun applicationsStats(timeline: Timeline, type: Type): Flow<Resource<List<LaunchedAppDomain>>> = channelFlow {
         send(Resource.loading())
 
-        //count application stats
-        val applicationsStats = wrapApplicationStats(timeline)
+        if (!type.isFilterable) error("type is not filterable")
+
+        when (type) {
+            Type.SCREEN_TIME -> {
+                val selection = getUpdatedTimes(timeline)
+                val applicationsStats = usageStatsManager.getApplicationsStats(startTimestamp = selection.from, finishTimestamp = selection.to)
+
+            }
+            Type.NOTIFICATIONS_RECEIVED -> {
+                //count application stats
+                val applicationsStats = wrapApplicationStats(timeline)
+
+                countNotificationsReceived(applicationsStats)
+            }
+            Type.SEANCES -> {
+                //count application stats
+                val applicationsStats = wrapApplicationStats(timeline)
+
+                countSeances(applicationsStats)
+            }
+            else -> error("type is not defined")
+        }
+
+
+
+        //если пользователь невыбрал даты и выбрал 1 из 4, то
+
+
 
         //count percentages and values
         val elementsWithPercents = when (type) {
             Type.SCREEN_TIME -> countTimelinesUsageInterest(applicationsStats)
-            Type.NOTIFICATIONS_RECEIVED -> countNotificationsReceived(applicationsStats)
+            Type.NOTIFICATIONS_RECEIVED ->
             Type.SEANCES -> countSeances(applicationsStats)
             else -> error("this type cant be processed, because its not filterable")
         }.sortedByDescending { it.realQuality }
@@ -152,28 +192,6 @@ class UserStatsRepositoryImpl @Inject constructor(
             notificationsSeenQuality = notificationsSeenQuality,
         )
 
-
-        //here we can to start fetch different (decreased by one timeline)
-
-//        TimeUtil.decreaseFromTime()
-//        val applicationsStatsWithDecreasedTimeline = async { wrapApplicationStats() }
-
-        //here we can send it to presentation, but without difference
-
-
-//        //create timeline
-//        val cacheTimeline = when (timeline.timelineType) {
-//            TimelineType.CUSTOM -> TODO()
-//            else -> UserStatsRepository.Select(
-//                from = TimeUtil.getPreviousTimeFromTimelineType(timelineType = timeline.timelineType),
-//                to = TimeUtil.getCurrentTimeMillis()
-//            )
-//        }
-//
-//        //get timeline part from cache, always only from cache
-//        val cashedStats =
-//            applicationsStatsHolder.getApplication(from = cacheTimeline.from, to = cacheTimeline.to, appPackage = appPackage)?.toDomain()
-
         detailedApplication?.let {
             send(Resource.success(data = detailedApplication))
         } ?: kotlin.run {
@@ -193,7 +211,7 @@ class UserStatsRepositoryImpl @Inject constructor(
         //Get cache updated times
         val cacheUpdateTimes = updateTimesHolder.getAppCacheTimestamps()
 
-        val currentTime = TimeUtil.getCurrentTimeMillis()
+        val currentTime = TimeUtil.getStartOfTomorrowTimestamp()
 
         //count merge updates
         val lastUpdateAppsTime = mergeUpdatedTimes(
@@ -210,32 +228,48 @@ class UserStatsRepositoryImpl @Inject constructor(
             else
                 null
         }
+
+        //get timeline cache from device
+        val managerTimelineStats = async {
+            if (lastUpdateAppsTime.managerDetailed != null)
+                usageStatsManager.getDetailedApplicationsStats(startTimestamp = lastUpdateAppsTime.managerDetailed.from, finishTimestamp = lastUpdateAppsTime.managerDetailed.to).filter { !it.nonSystem }.toDomain()
+            else
+                null
+        }
+
         //get timeline cache from device
         val managerStats = async {
-            if (lastUpdateAppsTime.manager != null)
-                usageStatsManager.getApplicationsStats(startTimestamp = lastUpdateAppsTime.manager.from, finishTimestamp = lastUpdateAppsTime.manager.to).filter { !it.nonSystem }.toDomain()
+            if (lastUpdateAppsTime.managerDetailed != null)
+                usageStatsManager.getDetailedApplicationsStats(startTimestamp = lastUpdateAppsTime.managerDetailed.from, finishTimestamp = lastUpdateAppsTime.managerDetailed.to).filter { !it.nonSystem }.toDomain()
             else
                 null
         }
 
         //immediate save changes to cache, it mustn't be cancellable
-        val caching = if (managerStats.await() != null && lastUpdateAppsTime.manager != null) {
+        val caching = if (managerTimelineStats.await() != null && lastUpdateAppsTime.managerDetailed != null) {
             listOf(
                 async(SupervisorJob() + dispatchers.io + NonCancellable) {
-                    applicationsStatsHolder.setApplications(applicationsList = managerStats.await()!!.toCash())
+                    applicationsStatsHolder.setApplications(applicationsList = managerTimelineStats.await()!!.toCash())
                 },
                 async(SupervisorJob() + dispatchers.io + NonCancellable) {
-                    updateTimesHolder.updatedAppList(from = lastUpdateAppsTime.manager.from, lastUpdateAppsTime.manager.to)
+                    when {
+                        cacheUpdateTimes.first == 0L && cacheUpdateTimes.second == 0L -> { //first time launched, so cache is empty
+                            updateTimesHolder.updatedAppList(from = lastUpdateAppsTime.managerDetailed.from, to = lastUpdateAppsTime.managerDetailed.to)
+                        }
+                        else -> { //not first launch
+                            updateTimesHolder.updatedAppList(from = null, to = lastUpdateAppsTime.managerDetailed.to)
+                        }
+                    }
                 }
             )
         } else null
 
         //merge
         val mergedElements = when {
-            cashedStats.await() == null && managerStats.await() == null -> error("cashed info and user info cant be nullable both!")
-            cashedStats.await() == null -> managerStats.await()!!
-            managerStats.await() == null -> cashedStats.await()!!
-            else -> merge(cash = cashedStats.await()!!, stats = managerStats.await()!!.associateBy { it.appPackage }.toMutableMap())
+            cashedStats.await() == null && managerTimelineStats.await() == null -> error("cashed info and user info cant be nullable both!")
+            cashedStats.await() == null -> managerTimelineStats.await()!!
+            managerTimelineStats.await() == null -> cashedStats.await()!!
+            else -> merge(cash = cashedStats.await()!!, stats = managerTimelineStats.await()!!.associateBy { it.appPackage }.toMutableMap())
         }
 
         //wait when all cashing operations will finish
@@ -262,6 +296,8 @@ class UserStatsRepositoryImpl @Inject constructor(
     }
 
     /**
+     * Used for working with detailed timelines.
+     *
      * User can select predefined timeline, but part of it can be already parsed
      * so here we merging lastCashUpdateTimeline and lastTimeline from selected timeline
      * to combine them and get correct "from" long value that we can use
@@ -284,7 +320,7 @@ class UserStatsRepositoryImpl @Inject constructor(
         if (cashSelect.from == 0L && cashSelect.to == 0L && timelineType != TimelineType.CUSTOM) {
             val last = TimeUtil.getPreviousTimeFromTimelineType(timelineType = TimelineTypeMax().max)
             return UserStatsRepository.MergedTimes(
-                manager = UserStatsRepository.Select(from = last, to = current),//npe ok
+                managerDetailed = UserStatsRepository.Select(from = last, to = current),//npe ok
                 cache = null,
             )
         }
@@ -294,24 +330,24 @@ class UserStatsRepositoryImpl @Inject constructor(
             if (customSelect.from < cashSelect.from) {
                 if (customSelect.to < cashSelect.from) {
                     return UserStatsRepository.MergedTimes(
-                        manager = UserStatsRepository.Select(from = customSelect.from, to = cashSelect.from),
+                        managerDetailed = UserStatsRepository.Select(from = customSelect.from, to = cashSelect.from),
                         cache = null,
                     )
                 } else {
                     return UserStatsRepository.MergedTimes(
-                        manager = UserStatsRepository.Select(from = customSelect.from, to = cashSelect.from),
+                        managerDetailed = UserStatsRepository.Select(from = customSelect.from, to = cashSelect.from),
                         cache = UserStatsRepository.Select(from = cashSelect.from, to = customSelect.to),
                     )
                 }
             } else {
                 if (customSelect.to <= cashSelect.to) {
                     return UserStatsRepository.MergedTimes(
-                        manager = null,
+                        managerDetailed = null,
                         cache = UserStatsRepository.Select(from = customSelect.from, to = customSelect.to),
                     )
                 } else {
                     return UserStatsRepository.MergedTimes(
-                        manager = UserStatsRepository.Select(from = cashSelect.to, to = current),
+                        managerDetailed = UserStatsRepository.Select(from = cashSelect.to, to = current),
                         cache = UserStatsRepository.Select(from = customSelect.from, to = cashSelect.to),
                     )
                 }
@@ -322,11 +358,30 @@ class UserStatsRepositoryImpl @Inject constructor(
         if (timelineType != TimelineType.CUSTOM) {
             val fromCache = TimeUtil.getPreviousTimeFromTimelineType(timelineType = timelineType)
             return UserStatsRepository.MergedTimes(
-                manager = UserStatsRepository.Select(from = cashSelect.to, to = current),
+                managerDetailed = UserStatsRepository.Select(from = cashSelect.to, to = current),
                 cache = UserStatsRepository.Select(from = fromCache, to = cashSelect.to),
             )
         }
         error("no other way")
+    }
+
+    private suspend fun getUpdatedTimes(timeline: Timeline): UserStatsRepository.Select {
+        when (timeline.timelineType) {
+            TimelineType.CUSTOM -> {
+                return UserStatsRepository.Select(
+                    from = timeline.from!!,//npe ok
+                    to = timeline.to!!,
+                )
+            }
+            else -> {
+                val previous = TimeUtil.getPreviousTimeFromTimelineType(timelineType = timeline.timelineType)
+                val tomorrowStart = TimeUtil.getStartOfTomorrowTimestamp() //end of today is always start of tomorrow
+                return UserStatsRepository.Select(
+                    from = previous,//npe ok
+                    to = tomorrowStart,
+                )
+            }
+        }
     }
 
     /**

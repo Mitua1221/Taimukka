@@ -254,6 +254,7 @@ fun AppListItem(
  * Formatting typed value to presentation string
  */
 fun formatTypeValue(type: Type, context: Context, quality: Long): String {
+    println(quality)
     return when (type) {
         Type.SCREEN_TIME -> formatMillisToPresentation(context, quality)
         Type.SEANCES -> quality.toString()

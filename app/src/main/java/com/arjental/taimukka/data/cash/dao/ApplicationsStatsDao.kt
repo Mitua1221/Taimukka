@@ -1,9 +1,10 @@
 package com.arjental.taimukka.data.cash.dao
 
 import androidx.room.*
+import com.arjental.taimukka.entities.data.cash.ApplicationForegroundMarksCash
 import com.arjental.taimukka.entities.data.cash.ApplicationInfoCash
+import com.arjental.taimukka.entities.data.cash.ApplicationNotificationsMarksCash
 import com.arjental.taimukka.entities.data.cash.ApplicationStatsCash
-import com.arjental.taimukka.entities.data.cash.ApplicationTimeMarksCash
 
 @Dao
 interface ApplicationsStatsDao {
@@ -18,11 +19,27 @@ interface ApplicationsStatsDao {
     suspend fun setApplications(appList: List<ApplicationInfoCash>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun setApplicationTimeMarks(timeMarksList: List<ApplicationTimeMarksCash>)
+    suspend fun setApplicationForegroundMarks(timeMarksList: List<ApplicationForegroundMarksCash>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun setApplicationNotificationsMarks(notificationMarks: List<ApplicationNotificationsMarksCash>)
 
     @Transaction
     @Query("SELECT * FROM applications_info")
     suspend fun getApplications(): List<ApplicationStatsCash>
+
+//    @Transaction
+//    @Query("SELECT DISTINCT * FROM applications_info INNER JOIN applications_time_marks " +
+//            "ON applications_info.app_package = applications_time_marks.app_package_sync " +
+//            "WHERE applications_time_marks.`from` >= (:from) " +
+//            "AND  applications_time_marks.`to` <= (:to) ")
+//    suspend fun getApplications(from: Long, to: Long): List<ApplicationStatsCash>
+
+    @Query("DELETE FROM applications_info")
+    suspend fun clear()
+
+    @Query("SELECT * FROM applications_info WHERE app_package = :appPackage")
+    suspend fun getApplication(appPackage: String): ApplicationStatsCash?
 
 //    @Update
 //    suspend fun updateCashedUser(user: CashedUserEntity)
@@ -33,8 +50,7 @@ interface ApplicationsStatsDao {
 //    @Query("SELECT * FROM cashed_user_entity WHERE is_user_deleted != 1")
 //    fun subscribeOnCashedUsers(): LiveData<List<CashedUserEntity>>
 //
-//    @Query("SELECT * FROM cashed_user_entity WHERE is_user_deleted != 1")
-//    fun getCashedUsersList(): List<CashedUserEntity>
+
 //
 //    @Query("SELECT * FROM cashed_user_entity WHERE is_active = 1")
 //    suspend fun getCurrentCashedUser(): CashedUserEntity?

@@ -2,8 +2,9 @@ package com.arjental.taimukka.presentaion.ui.screens.tabs.settings
 
 import androidx.annotation.StringRes
 import com.arjental.taimukka.R
+import com.arjental.taimukka.presentaion.ui.components.uiutils.AdditionalError
 import com.arjental.taimukka.presentaion.ui.components.uiutils.DividedScreens
-import com.arjental.taimukka.presentaion.ui.components.uiutils.LoadingScreens
+import com.arjental.taimukka.presentaion.ui.components.uiutils.AdditionalScreens
 import com.arjental.taimukka.presentaion.ui.components.uiutils.ScreenPart
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -22,7 +23,11 @@ class SettingsState(
         /*AuthorizationPart()*/
     ),
     override val full: ImmutableList<ScreenPart> = persistentListOf(),
-) : DividedScreens
+) : DividedScreens {
+    override fun elevated(screenPart: ScreenPart, foundInRight: Boolean): DividedScreens {
+        TODO("Not yet implemented")
+    }
+}
 
 
 /**
@@ -32,8 +37,10 @@ class SettingsState(
 @kotlinx.serialization.Serializable
 data class SettingsListElements(
     @StringRes @Transient val title: Int = R.string.settings_title,
-    val list: ImmutableList<SettingsListElement> = persistentListOf()
-) : LoadingScreens(), java.io.Serializable
+    val list: ImmutableList<SettingsListElement> = persistentListOf(),
+    override val loading: Boolean = true,
+    override val error: AdditionalError? = null
+) : AdditionalScreens(), java.io.Serializable
 
 suspend fun SettingsListElements.createList(
     useDefaultThemeSwitchState: Boolean,

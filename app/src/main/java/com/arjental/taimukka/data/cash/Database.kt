@@ -8,13 +8,12 @@ import com.arjental.taimukka.data.cash.dao.ApplicationsStatsDao
 import com.arjental.taimukka.data.cash.dao.SettingsDao
 import com.arjental.taimukka.data.cash.dao.UpdateTimesDao
 import com.arjental.taimukka.entities.data.cash.*
-import dagger.Reusable
-import javax.inject.Singleton
 
 @Database(
     entities = [
         ApplicationInfoCash::class,
-        ApplicationTimeMarksCash::class,
+        ApplicationForegroundMarksCash::class,
+        ApplicationNotificationsMarksCash::class,
         UpdateTimes::class,
         AppLaunched::class,
         AppSettings::class,

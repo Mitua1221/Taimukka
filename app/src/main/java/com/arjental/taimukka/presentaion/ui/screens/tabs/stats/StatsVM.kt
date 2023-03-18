@@ -23,25 +23,25 @@ class StatsVM @Inject constructor(
     private var loadApplicationStatsJob: Job? = null
 
     fun loadApplicationStats() {
-        if (!loadApplicationStatsNotRun) {
-            loadApplicationStatsNotRun = true
-            loadApplicationStatsJob?.cancel()
-            loadApplicationStatsJob = viewModelScope.launch(Dispatchers.Default) {
-                applicationsStatsUC.collect().handleErrors(defaultOnError = emptyList()).collectLatest {
-                    when (it) {
-                        is Resource.Loading -> {
-                            modifyState(StatsState.PageLoading())
-                        }
-                        is Resource.Error -> {
-                            modifyState(StatsState.PageError())
-                        }
-                        is Resource.Success -> {
-                            modifyState(StatsState.PageLoaded(it.data.map { it.appPackage }))
-                        }
-                    }
-                }
-            }
-        }
+//        if (!loadApplicationStatsNotRun) {
+//            loadApplicationStatsNotRun = true
+//            loadApplicationStatsJob?.cancel()
+//            loadApplicationStatsJob = viewModelScope.launch(Dispatchers.Default) {
+//                applicationsStatsUC.applicationsStats().handleErrors(defaultOnError = emptyList()).collectLatest {
+//                    when (it) {
+//                        is Resource.Loading -> {
+//                            modifyState(StatsState.PageLoading())
+//                        }
+//                        is Resource.Error -> {
+//                            modifyState(StatsState.PageError())
+//                        }
+//                        is Resource.Success -> {
+//                            modifyState(StatsState.PageLoaded(it.data.map { it.appPackage }))
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 
 

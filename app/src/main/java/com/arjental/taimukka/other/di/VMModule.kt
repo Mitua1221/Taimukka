@@ -3,7 +3,8 @@ package com.arjental.taimukka.other.di
 import androidx.lifecycle.ViewModel
 import com.arjental.taimukka.other.utils.factories.viewmodel.ViewModelKey
 import com.arjental.taimukka.presentaion.ui.screens.splash.SplashVM
-import com.arjental.taimukka.presentaion.ui.screens.tabs.app_list.AppListVM
+import com.arjental.taimukka.presentaion.ui.screens.tabs.apps.AppDetailsVM
+import com.arjental.taimukka.presentaion.ui.screens.tabs.apps.AppListVM
 import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.SettingsVM
 import com.arjental.taimukka.presentaion.ui.screens.tabs.settings.screen_parts.AuthorizationVM
 import com.arjental.taimukka.presentaion.ui.screens.tabs.stats.StatsVM
@@ -41,6 +42,9 @@ interface VMModule {
     @ViewModelKey(AuthorizationVM::class)
     fun authorizationVM(viewModel: AuthorizationVM): ViewModel
 
-
+    @Binds
+    @IntoMap
+    @ViewModelKey(AppDetailsVM::class)
+    fun appDetailsVM(viewModel: AppDetailsVM): ViewModel
 
 }

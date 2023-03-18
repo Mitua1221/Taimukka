@@ -21,6 +21,10 @@ abstract class TTab : Tab, TScreen()
 @kotlinx.serialization.Serializable
 open class TScreen : TScreenInterface, Screen, ScreenLifecycleProvider {
 
+    /**
+     * If you need a lifecycle of parent composable, you must to override it to true
+     */
+
     open val implementParentLifecycle = false
 
     @Composable
